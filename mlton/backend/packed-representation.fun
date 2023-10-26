@@ -1573,7 +1573,7 @@ structure Objptrs =
                        (*We mask 19 bits, because header words reserve 19 bits for the type index. See runtime/gc/object.h*)
                        val mask = Operand.word(WordX.fromIntInf(0xffffe,WordSize.objptrHeader()))
                        val (s, tag) =
-                          Statement.rshift (Offset {base = test,
+                          Statement.andb (Offset {base = test,
                                                     offset = Runtime.headerOffset (),
                                                     ty = Type.objptrHeader ()},
                                             mask)
