@@ -1542,8 +1542,12 @@ structure Objptrs =
                (cases, fn {con, dst, dstHasArg} =>
                 case conRep con of
                    ConRep.Tuple (TupleRep.Indirect (ObjptrRep.T {ty, tycon, ...})) =>
-                      SOME (WordX.fromInt (ObjptrTycon.index tycon,
-                                           WordSize.objptrHeader ()),
+                      SOME(let
+                         val ws = WordSize.objptrHeader()
+                         val ti = WordX.fromInt(ObjptrTycon.index tycon,ws)
+                      in
+                         WordX.lshift(ti,WordX.one ws)
+                      end,
                             Block.new
                             {statements = Vector.new0 (),
                              transfer = Goto {args = if dstHasArg
@@ -1566,12 +1570,13 @@ structure Objptrs =
                        val cases =
                           QuickSort.sortVector (cases, fn ((w, _), (w', _)) =>
                                                 WordX.le (w, w', {signed = false}))
-                       val shift = Operand.word (WordX.one WordSize.shiftArg)
+                       (*We mask 19 bits, because header words reserve 19 bits for the type index. See runtime/gc/object.h*)
+                       val mask = Operand.word(WordX.fromIntInf(0xffffe,WordSize.objptrHeader()))
                        val (s, tag) =
                           Statement.rshift (Offset {base = test,
                                                     offset = Runtime.headerOffset (),
                                                     ty = Type.objptrHeader ()},
-                                            shift)
+                                            mask)
                     in
                        ([s], Switch (Switch.T {cases = cases,
                                                default = default,
