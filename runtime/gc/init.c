@@ -90,7 +90,14 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
         char *arg;
 
         arg = argv[i];
-        if (0 == strcmp (arg, "copy-generational-ratio")) {
+        if (0 == strcmp (arg, "heap-profiling")) {
+          i++;
+          if (i == argc || 0 == strcmp (argv[i], "--"))
+            die ("@MLton heap-profiler missing argument(Output File Location).");
+          //printf("Openning  a file at [%s] in the future\n",argv[i++]);
+          s->heapProfilingFile = fopen(argv[i++], "wb");
+
+        } else if (0 == strcmp (arg, "copy-generational-ratio")) {
           i++;
           if (i == argc || 0 == strcmp (argv[i], "--"))
             die ("@MLton copy-generational-ratio missing argument.");
@@ -340,6 +347,7 @@ int GC_init (GC_state s, int argc, char **argv) {
   s->sysvals.physMem = GC_physMem ();
   s->weaks = NULL;
   s->saveWorldStatus = true;
+  s->heapProfilingFile = NULL;
 
   initIntInf (s);
   initSignalStack (s);

@@ -63,6 +63,7 @@ struct GC_state {
   struct GC_staticHeaps staticHeaps;
   struct GC_sysvals sysvals;
   GC_weak weaks; /* Linked list of (live) weak pointers */
+  FILE *heapProfilingFile;
 };
 
 #endif /* (defined (MLTON_GC_INTERNAL_TYPES)) */

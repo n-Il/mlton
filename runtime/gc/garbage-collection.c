@@ -48,6 +48,19 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
   setCardMapAndCrossMap (s);
   resizeHeapSecondary (s);
   assert (s->heap.oldGenSize + bytesRequested <= s->heap.size);
+  if (s->heapProfilingFile != NULL){ 
+    //printf("%ld,%lu,%lu\n",time(NULL),s->lastMajorStatistics.bytesLive,s->heap.size);
+    struct rusage ru_hprofiling;
+    uintmax_t time_hprofiling;
+    getrusage(RUSAGE_SELF, &ru_hprofiling);
+    time_hprofiling = rusageTime (&ru_hprofiling);
+    //printf("gctime:%s\n",uintmaxToCommaString(time_hprofiling));
+    //time_t t = time(NULL);
+    //fwrite(&t,sizeof(time_t),1,s->heapProfilingFile);
+    fwrite(&time_hprofiling,sizeof(uintmax_t),1,s->heapProfilingFile);
+    fwrite(&s->lastMajorStatistics.bytesLive,sizeof(size_t),1,s->heapProfilingFile);
+    fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
+  }
 }
 
 void growStackCurrent (GC_state s) {
