@@ -14,7 +14,6 @@ void minorGC (GC_state s) {
 //added for heap profiling
 void printObjptrHeader(GC_state s, objptr *opp, __attribute__((unused)) void *env){
     printf("testingheaderptr:%p\n",*opp);
-    printf("getting called\n");
     return;
 }
 
@@ -70,8 +69,10 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
 
     //WIP code for going through heap and getting the headers of objects
     // and using them to generate fake file location based on mod% the top 32 bits
+    printf("GC START PRINT\n");
     struct GC_foreachObjptrClosure testingClosure = {.fun =printObjptrHeader, .env=NULL};
-    foreachGlobalObjptr(s,&testingClosure);
+    foreachObjptrInRange(s,s->heap.start,s->heap.start+s->heap.size,&testingClosure,false);
+    printf("GC END PRINT\n\n");
   }
 }
 
