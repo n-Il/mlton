@@ -11,6 +11,12 @@ void minorGC (GC_state s) {
   minorCheneyCopyGC (s);
 }
 
+//added for heap profiling
+void printObjptrHeader(GC_state s, objptr *opp, __attribute__((unused)) void *env){
+    printf("getting called\n");
+    return;
+}
+
 void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
   uintmax_t numGCs;
   size_t desiredSize;
@@ -60,6 +66,11 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     fwrite(&time_hprofiling,sizeof(uintmax_t),1,s->heapProfilingFile);
     fwrite(&s->lastMajorStatistics.bytesLive,sizeof(size_t),1,s->heapProfilingFile);
     fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
+
+    //WIP code for going through heap and getting the headers of objects
+    // and using them to generate fake file location based on mod% the top 32 bits
+    struct GC_foreachObjptrClosure testingClosure = {.fun =printObjptrHeader, .env=NULL};
+    foreachGlobalObjPtr(s,&testingClosure);
   }
 }
 
