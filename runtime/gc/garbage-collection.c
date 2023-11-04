@@ -48,19 +48,54 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
   setCardMapAndCrossMap (s);
   resizeHeapSecondary (s);
   assert (s->heap.oldGenSize + bytesRequested <= s->heap.size);
+  
+
   //Heap Profiling Code
   if (s->heapProfilingFile != NULL){ 
-    //printf("%ld,%lu,%lu\n",time(NULL),s->lastMajorStatistics.bytesLive,s->heap.size); 
     //rusage is used to gather ms since program started execution
     struct rusage ru_hprofiling;
     uintmax_t time_hprofiling;
     getrusage(RUSAGE_SELF, &ru_hprofiling);
     time_hprofiling = rusageTime (&ru_hprofiling);
+
     //Write the time,live bytes, and heap size in bytes to the file
     fwrite(&time_hprofiling,sizeof(uintmax_t),1,s->heapProfilingFile);
-    fwrite(&s->lastMajorStatistics.bytesLive,sizeof(size_t),1,s->heapProfilingFile);
+    fwrite(&s->heap.oldGenSize,sizeof(size_t),1,s->heapProfilingFile);//same as lastMajorStatistics.bytesLive
     fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
-    fwrite(&s->heap.oldGenSize,sizeof(size_t),1,s->heapProfilingFile);
+
+    //start of code to traverse heap 
+    
+    //init code
+    pointer back;
+    pointer endOfLastMarked;
+    pointer front;
+    size_t gap;
+    GC_header header;
+    GC_header *headerp;
+    pointer p;
+    size_t size, skipFront, skipGap;
+    //more init code
+    front = alignFrontier (s, s->heap.start);
+    back = s->heap.start + s->heap.oldGenSize;
+    gap = 0;
+    endOfLastMarked = front;
+
+    updateObject:
+    //end condition
+    if (front == back)
+        goto done;
+    //code towards advancing to data
+    p = advanceToObjectData (s, front);
+    headerp = getHeaderp (p);
+    header = *headerp;
+    //some code which gets size of object
+    size = sizeofObject (s, p);
+    gap += size;
+    front += size;
+    goto updateObject;
+    done:
+    //end of code to traverse heap 
+
   }
 }
 
