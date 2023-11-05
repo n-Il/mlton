@@ -64,18 +64,15 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
 
     //start of code to traverse heap 
-    printf("start traverse heap\n");
-    //init code
     pointer back;
     pointer front;
     GC_header header;
     GC_header *headerp;
     pointer p;
     size_t size;
-    //more init code
     front = alignFrontier (s, s->heap.start);
     back = s->heap.start + s->heap.oldGenSize;
-
+    int mods[] = {0,0,0,0,0};
     updateObject:
     //end condition
     if (front == back)
@@ -85,14 +82,36 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     headerp = getHeaderp (p);
     header = *headerp;
     if (GC_VALID_HEADER_MASK & header){
-        printf("header = 0x%" PRIx64 "\n",header);
+        GC_header higher32mask = (GC_header)0xFFFFFFFF00000000;
+        GC_header higher32 = (higher32mask & header) >> 32;
+        int randomModFive = higher32 % 5;
+        //printf("header = 0x%" PRIx64 "\n",header);
+        //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
+        //printf("mod5 = %d\n",randomModFive);
+        if (randomModFive == 0){
+            mods[0]++;
+        } else if (randomModFive == 1){
+            mods[1]++;
+        } else if (randomModFive == 2){
+            mods[2]++;
+        } else if (randomModFive == 3){
+            mods[3]++;
+        } else if (randomModFive == 4){
+            mods[4]++;
+        }
     }
     //some code which gets size of object
     size = sizeofObject (s, p);
     front += size;
     goto updateObject;
     done:
-    printf("end traverse heap\n\n");
+    //printf("%d %d %d %d %d\n",mods[0],mods[1],mods[2],mods[3],mods[4]);
+    fwrite(&mods[0],sizeof(int),1,s->heapProfilingFile);
+    fwrite(&mods[1],sizeof(int),1,s->heapProfilingFile);
+    fwrite(&mods[2],sizeof(int),1,s->heapProfilingFile);
+    fwrite(&mods[3],sizeof(int),1,s->heapProfilingFile);
+    fwrite(&mods[4],sizeof(int),1,s->heapProfilingFile);
+    //printf("%d\n",sizeof(int));
     //end of code to traverse heap 
   }
 }
