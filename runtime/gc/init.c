@@ -97,6 +97,9 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
           //printf("Openning  a file at [%s] in the future\n",argv[i++]);
           s->heapProfilingFile = fopen(argv[i++], "wb");
           s->heapProfilingFileTwo = fopen("testheapobj", "wb");
+        } else if (0 == strcmp (arg, "heap-profiling-gc-survived")) {
+          i++;
+          s->heapProfilingGcSurvived = true;
 
         } else if (0 == strcmp (arg, "copy-generational-ratio")) {
           i++;
@@ -349,6 +352,7 @@ int GC_init (GC_state s, int argc, char **argv) {
   s->weaks = NULL;
   s->saveWorldStatus = true;
   s->heapProfilingFile = NULL;
+  s->heapProfilingGcSurvived = false;
 
   initIntInf (s);
   initSignalStack (s);

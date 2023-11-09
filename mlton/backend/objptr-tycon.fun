@@ -47,42 +47,12 @@ val layout = Layout.str o toString
 
 fun toHeader (opt: t): WordX.t =
    ( 
-   (*
-   print(WordX.toString(WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),WordX.fromIntInf(4294967296 ,WordSize.objptrHeader ())),{suffix = false}))
-   ;print("\n")
-   ;print(WordX.toString(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),{suffix = false}))
-   ;print("\n\n")
-   WordX.<<(WordX.one, 32)
-    *)
-
-   (*get Word that is random 32 bits*)
-   (*print(WordX.toString(WordX.lshift(WordX.one(WordSize.objptrHeader()), WordX.one(WordSize.objptrHeader())),{suffix=false}))
-   ;print(Word.toString(MLton.Random.rand()))
-   ;print("\n")
-   (*shift 32 bits by multiplying by 2 x times, where x is the number of bits*)
-   ;print("\n")
-   *)
-
-   
-   (* SAME AS BELOW BUT USES SHIFT
+   if false then 
    WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),
-              WordX.lshift(WordX.one(WordSize.objptrHeader()),WordX.fromIntInf(32,WordSize.objptrHeader())))
-   WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),(WordX.fromIntInf(4294967296,WordSize.objptrHeader())))
-    *)
-   print(WordX.toString(
-    WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
-   ,{suffix=false}))
-   ;print("\n")
-   ;print(WordX.toString(
-    WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),
-             WordX.lshift(WordX.fromWord(MLton.Random.rand(),WordSize.objptrHeader()),
-                       WordX.fromIntInf(32,WordSize.objptrHeader())))     
-   ,{suffix=false}))
-   ;print("\n")
-   ;print("\n")
-   ;WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),
              WordX.lshift(WordX.fromWord(MLton.Random.rand(),WordSize.objptrHeader()),
                           WordX.fromIntInf(32,WordSize.objptrHeader())))
+   else
+   WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
    )
 
 val stack = new ()
