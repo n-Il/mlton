@@ -427,6 +427,7 @@ signature CONTROL_FLAGS =
        | ProfileCount
        | ProfileDrop
        | ProfileTime
+       | ProfileHeap
       val profile: profile ref
 
       val profileBlock: bool ref

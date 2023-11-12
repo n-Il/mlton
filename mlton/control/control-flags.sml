@@ -1433,6 +1433,7 @@ structure Profile =
        | ProfileCount
        | ProfileDrop
        | ProfileTime
+       | ProfileHeap
 
       val toString =
          fn ProfileNone => "None"
@@ -1441,6 +1442,7 @@ structure Profile =
           | ProfileCount => "Count"
           | ProfileDrop => "Drop"
           | ProfileTime => "Time"
+          | ProfileHeap => "Heap"
    end
 
 datatype profile = datatype Profile.t

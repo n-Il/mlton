@@ -753,6 +753,7 @@ fun outputDeclarations
                 | Control.ProfileCount => "PROFILE_COUNT"
                 | Control.ProfileDrop => "PROFILE_NONE"
                 | Control.ProfileTime => "PROFILE_TIME"
+                | Control.ProfileHeap => "PROFILE_HEAP"
          in
             print (C.callNoSemi (case !Control.format of
                                     Control.Archive => "MLtonLibrary"

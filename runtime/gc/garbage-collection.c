@@ -91,9 +91,24 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
             if (higher32 < 4294967295){
                 GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));
                 *headerp = newheader;
+                //logging data
+                GC_header newhigher32 = higher32+1;
+                if (newhigher32 == 1){
+                    survives[0]++; 
+                }else if (newhigher32 == 2){
+                    survives[1]++; 
+                }else if (newhigher32 < 10){
+                    survives[2]++; 
+                }else if (newhigher32 < 50){
+                    survives[3]++; 
+                }else{
+                    survives[4]++;
+                }
             }else{
                 printf("Heap Profiling hitting max value for gc survived\n");
+                survives[4]++;
             }
+
 
         }else{
             int randomModFive = higher32 % 5;
@@ -120,7 +135,11 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     goto updateObject;
     done:
     if (s->heapProfilingGcSurvived){
-        printf("GETDATAOUTHERE\n");
+        fwrite(&survives[0],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&survives[1],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&survives[2],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&survives[3],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&survives[4],sizeof(int),1,s->heapProfilingFile);
     }else{ 
         fwrite(&mods[0],sizeof(int),1,s->heapProfilingFile);
         fwrite(&mods[1],sizeof(int),1,s->heapProfilingFile);
