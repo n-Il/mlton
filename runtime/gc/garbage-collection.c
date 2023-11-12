@@ -73,45 +73,61 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     front = alignFrontier (s, s->heap.start);
     back = s->heap.start + s->heap.oldGenSize;
     int mods[] = {0,0,0,0,0};
+    // 1,2,lt10, lt50, gte50
+    int survives[] = {0,0,0,0,0};
     updateObject:
     //end condition
     if (front == back)
         goto done;
-    //code towards advancing to data
     p = advanceToObjectData (s, front);
     headerp = getHeaderp (p);
     header = *headerp;
     if (GC_VALID_HEADER_MASK & header){
         GC_header higher32mask = (GC_header)0xFFFFFFFF00000000;
+        GC_header lower32mask = (GC_header)0x00000000FFFFFFFF;
         GC_header higher32 = (higher32mask & header) >> 32;
-        int randomModFive = higher32 % 5;
-        //printf("header = 0x%" PRIx64 "\n",header);
-        //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
-        //printf("mod5 = %d\n",randomModFive);
-        if (randomModFive == 0){
-            mods[0]++;
-        } else if (randomModFive == 1){
-            mods[1]++;
-        } else if (randomModFive == 2){
-            mods[2]++;
-        } else if (randomModFive == 3){
-            mods[3]++;
-        } else if (randomModFive == 4){
-            mods[4]++;
+        if (s->heapProfilingGcSurvived){ 
+            //increase unless increasing would run out of space
+            if (higher32 < 4294967295){
+                GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));
+                *headerp = newheader;
+            }else{
+                printf("Heap Profiling hitting max value for gc survived\n");
+            }
+
+        }else{
+            int randomModFive = higher32 % 5;
+            //printf("header = 0x%" PRIx64 "\n",header);
+            //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
+            //printf("mod5 = %d\n",randomModFive);
+            if (randomModFive == 0){
+                mods[0]++;
+            } else if (randomModFive == 1){
+                mods[1]++;
+            } else if (randomModFive == 2){
+                mods[2]++;
+            } else if (randomModFive == 3){
+                mods[3]++;
+            } else if (randomModFive == 4){
+                mods[4]++;
+            }
         }
+    }else{
+        printf("unexpected header at heap profiling code");
     }
-    //some code which gets size of object
     size = sizeofObject (s, p);
     front += size;
     goto updateObject;
     done:
-    //printf("%d %d %d %d %d\n",mods[0],mods[1],mods[2],mods[3],mods[4]);
-    fwrite(&mods[0],sizeof(int),1,s->heapProfilingFile);
-    fwrite(&mods[1],sizeof(int),1,s->heapProfilingFile);
-    fwrite(&mods[2],sizeof(int),1,s->heapProfilingFile);
-    fwrite(&mods[3],sizeof(int),1,s->heapProfilingFile);
-    fwrite(&mods[4],sizeof(int),1,s->heapProfilingFile);
-    //printf("%d\n",sizeof(int));
+    if (s->heapProfilingGcSurvived){
+        printf("GETDATAOUTHERE\n");
+    }else{ 
+        fwrite(&mods[0],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&mods[1],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&mods[2],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&mods[3],sizeof(int),1,s->heapProfilingFile);
+        fwrite(&mods[4],sizeof(int),1,s->heapProfilingFile);
+    }
     //end of code to traverse heap 
   }
 }
