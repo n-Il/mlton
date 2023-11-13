@@ -734,7 +734,7 @@ fun makeOptions {usage} =
                                            List.push (profPasses, re)
                                         end
                        | NONE => usage (concat ["invalid -diag-pass flag: ", s])))),
-       (Normal, "profile", " {no|alloc|count|time}",
+       (Normal, "profile", " {no|alloc|count|time|heap}",
         "produce executable suitable for profiling",
         SpaceString
         (fn s =>
@@ -749,6 +749,7 @@ fun makeOptions {usage} =
                             | "count" => ProfileCount
                             | "drop" => ProfileDrop
                             | "time" => ProfileTime
+                            | "heap" => ProfileHeap
                             | _ => usage (concat
                                           ["invalid -profile arg: ", s]))))),
        (Expert, "profile-block", " {false|true}",

@@ -273,6 +273,9 @@ void profileWrite (GC_state s, GC_profileData p, const char *fileName) {
   case PROFILE_COUNT:
     kind = "count\n";
     break;
+  case PROFILE_HEAP:
+    kind = "heap\n";
+    break;
   case PROFILE_NONE:
     die ("impossible PROFILE_NONE");
     // break;
@@ -423,6 +426,9 @@ void initProfiling (GC_state s) {
     case PROFILE_TIME:
       initProfilingTime (s);
       break;
+    case PROFILE_HEAP:
+     //not sure yet what to turn on, so for now nothing
+     break;
     default:
       assert (FALSE);
     }
