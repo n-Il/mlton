@@ -416,6 +416,7 @@ void initProfiling (GC_state s) {
   else {
     s->profiling.isOn = TRUE;
     switch (s->profiling.kind) {
+    case PROFILE_HEAP:
     case PROFILE_ALLOC:
     case PROFILE_COUNT:
       s->profiling.data = profileMalloc (s);
@@ -426,9 +427,6 @@ void initProfiling (GC_state s) {
     case PROFILE_TIME:
       initProfilingTime (s);
       break;
-    case PROFILE_HEAP:
-     //not sure yet what to turn on, so for now nothing
-     break;
     default:
       assert (FALSE);
     }
