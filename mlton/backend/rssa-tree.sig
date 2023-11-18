@@ -60,7 +60,8 @@ signature RSSA_TREE =
              | Move of {dst: Operand.t,
                         src: Operand.t}
              | Object of {dst: Var.t * Type.t,
-                          obj: Object.t}
+                          obj: Object.t, 
+                          loc: int option}
              | PrimApp of {args: Operand.t vector,
                            dst: (Var.t * Type.t) option,
                            prim: Type.t Prim.t}
@@ -207,7 +208,7 @@ signature RSSA_TREE =
                      objectTypes: ObjectType.t vector,
                      profileInfo: {sourceMaps: SourceMaps.t,
                                    getFrameSourceSeqIndex: Label.t -> int option} option,
-                     statics: {dst: Var.t * Type.t, obj: Object.t} vector}
+                     statics: {dst: Var.t * Type.t, obj: Object.t, loc: int option} vector}
 
             val clear: t -> unit
             (* dfs (p, v) visits the functions in depth-first order, applying v f

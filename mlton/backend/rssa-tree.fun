@@ -154,7 +154,8 @@ structure Statement =
        | Move of {dst: Operand.t,
                   src: Operand.t}
        | Object of {dst: Var.t * Type.t,
-                    obj: Object.t}
+                    obj: Object.t,
+                    loc: int option}
        | PrimApp of {args: Operand.t vector,
                      dst: (Var.t * Type.t) option,
                      prim: Type.t Prim.t}
@@ -172,7 +173,7 @@ structure Statement =
             case s of
                Bind {dst = (x, t), src, ...} => def (x, t, useOperand (src, a))
              | Move {dst, src} => useOperand (src, useOperand (dst, a))
-             | Object {dst = (x, t), obj} => def (x, t, Object.foldUse (obj, a, useOperand))
+             | Object {dst = (x, t), obj, ...} => def (x, t, Object.foldUse (obj, a, useOperand))
              | PrimApp {dst, args, ...} =>
                   Vector.fold (args,
                                Option.fold (dst, a, fn ((x, t), a) =>
@@ -212,7 +213,7 @@ structure Statement =
                         pinned = pinned,
                         src = oper src}
              | Move {dst, src} => Move {dst = oper dst, src = oper src}
-             | Object {dst, obj} => Object {dst = dst, obj = Object.replace' (obj, fs)}
+             | Object {dst, obj, loc} => Object {dst = dst, obj = Object.replace' (obj, fs), loc = loc}
              | PrimApp {args, dst, prim} =>
                   PrimApp {args = Vector.map (args, oper),
                            dst = dst,
@@ -236,7 +237,7 @@ structure Statement =
                   mayAlign
                   [Operand.layout dst,
                    indent (seq [str ":= ", Operand.layout src], 2)]
-             | Object {dst = (x, t), obj} =>
+             | Object {dst = (x, t), obj, ...} =>
                   mayAlign
                   [seq [Var.layout x, constrain t],
                    indent (seq [str "= ", Object.layout obj], 2)]
@@ -790,7 +791,7 @@ structure Program =
                objectTypes: ObjectType.t vector,
                profileInfo: {sourceMaps: SourceMaps.t,
                              getFrameSourceSeqIndex: Label.t -> int option} option,
-               statics: {dst: Var.t * Type.t, obj: Object.t} vector}
+               statics: {dst: Var.t * Type.t, obj: Object.t , loc: int option} vector}
 
       fun clear (T {functions, main, statics, ...}) =
          (List.foreach (functions, Function.clear)
