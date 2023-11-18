@@ -401,7 +401,7 @@ fun checkScopes (program as Program.T {functions, main, statics, ...}): unit =
             ()
          end
       val _ = Vector.foreach (statics, fn {dst, obj} =>
-                              loopStmt (Statement.Object {dst = dst, obj = obj, loc = NONE}, true))
+                              loopStmt (Statement.Object {dst = dst, obj = obj}, true))
       val _ = List.foreach (functions, bindFunc o Function.name)
       val _ = loopFunc (main, true)
       val _ = List.foreach (functions, fn f => loopFunc (f, false))
