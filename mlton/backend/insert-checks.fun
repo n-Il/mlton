@@ -986,7 +986,9 @@ fun transform (Program.T {functions, handlesSignals, main, objectTypes, profileI
                                                       Vector.new1
                                                       {offset = Bytes.zero,
                                                        src = Operand.one flagWS}),
-                                              tycon = flagsTycon}}]))
+                                              tycon = flagsTycon}
+                                        ,loc = NONE
+                                        }]))
                 else (objectTypes, statics))
          end
 
