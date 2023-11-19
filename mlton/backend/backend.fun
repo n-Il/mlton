@@ -477,7 +477,7 @@ fun toMachine (rssa: Rssa.Program.t) =
             (add, finish, fn () => !allGlobalObjptrs)
          end
 
-      val () = Vector.foreach (statics, fn {dst = (dstVar, dstTy), obj} =>
+      val () = Vector.foreach (statics, fn {dst = (dstVar, dstTy), obj,...} =>
                                let
                                   val oper = addToStaticHeaps obj
                                in
@@ -649,7 +649,7 @@ fun toMachine (rssa: Rssa.Program.t) =
              | Move {dst, src} =>
                   move {dst = translateOperand dst,
                         src = translateOperand src}
-             | Object {dst = (dst, _), obj as Object.Normal {init, tycon}} =>
+             | Object {dst = (dst, _), obj as Object.Normal {init, tycon},...} =>
                   let
                      val dst = varOperand dst
                      val header = ObjptrTycon.toHeader tycon
@@ -665,7 +665,7 @@ fun toMachine (rssa: Rssa.Program.t) =
                                           size = Object.size (obj, {tyconTy = tyconTy})}
                       :: mkInit (init, mkDst))
                   end
-             | Object {dst = (dst, _), obj as Object.Sequence {init, tycon}} =>
+             | Object {dst = (dst, _), obj as Object.Sequence {init, tycon},...} =>
                   let
                      val dst = varOperand dst
                      val header = ObjptrTycon.toHeader tycon
