@@ -975,7 +975,9 @@ structure ObjptrRep =
             ([Object {dst = (dst, ty),
                       obj = Object.Normal
                             {init = Vector.fromListRev init,
-                             tycon = tycon}}]
+                             tycon = tycon}
+                      ,loc = NONE
+                    }]
              :: pre)
          end
 
@@ -1017,7 +1019,9 @@ structure ObjptrRep =
             ([Object {dst = (dst, ty),
                       obj = Object.Sequence
                             {init = Vector.fromListRev init,
-                             tycon = tycon}}]
+                             tycon = tycon}
+                     ,loc = NONE
+                             }]
              :: pre)
          end
 
