@@ -400,8 +400,8 @@ fun checkScopes (program as Program.T {functions, main, statics, ...}): unit =
          in
             ()
          end
-      val _ = Vector.foreach (statics, fn {dst, obj} =>
-                              loopStmt (Statement.Object {dst = dst, obj = obj}, true))
+      val _ = Vector.foreach (statics, fn {dst, obj, loc} =>
+                              loopStmt (Statement.Object {dst = dst, obj = obj, loc = loc}, true))
       val _ = List.foreach (functions, bindFunc o Function.name)
       val _ = loopFunc (main, true)
       val _ = List.foreach (functions, fn f => loopFunc (f, false))
@@ -525,7 +525,7 @@ fun typeCheck (p as Program.T {functions, main, objectTypes, profileInfo, static
                    ; checkOperand src
                    ; (Type.isSubtype (Operand.ty src, Operand.ty dst)
                       andalso Operand.isLocation dst))
-             | Object {dst = (_, dstTy), obj} =>
+             | Object {dst = (_, dstTy), obj, ...} =>
                   (Object.isOk (obj, {checkUse = checkOperand,
                                       tyconTy = tyconTy})
                    andalso Type.isSubtype (Object.ty obj, dstTy))
