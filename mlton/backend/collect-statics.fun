@@ -89,7 +89,7 @@ structure WordXVectorConsts =
                          val ty = Type.wordVector (WordXVector.elementSize wv)
                          val obj = Object.fromWordXVector wv
                       in
-                         List.push (newStatics, {dst = (var, ty), obj = obj})
+                         List.push (newStatics, {dst = (var, ty), obj = obj,loc= NONE})
                          ; Operand.Var {var = var, ty = ty}
                       end)
                 | _ => Operand.Const c
@@ -144,7 +144,7 @@ structure RealConsts =
                                       {init = init,
                                        tycon = vecTycon}
                                 in
-                                   SOME {dst = (vecVar, vecTy), obj = obj}
+                                   SOME {dst = (vecVar, vecTy), obj = obj, loc = NONE}
                                 end
                   in
                      (add, newStatic)
@@ -219,9 +219,9 @@ structure Globals =
                end
             fun statementIsStatic stmt =
                case stmt of
-                  Statement.Object {dst as (dstVar, _), obj} =>
+                  Statement.Object {dst as (dstVar, _), obj,loc} =>
                      if objectIsStatic obj
-                        then (List.push (newStatics, {dst = dst, obj = obj})
+                        then (List.push (newStatics, {dst = dst, obj = obj, loc = loc})
                               ; setVarIsStatic (dstVar, true)
                               ; true)
                         else false
