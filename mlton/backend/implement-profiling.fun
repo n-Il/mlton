@@ -729,7 +729,15 @@ fun transform program =
                                 end
                              ;
                             case s of
-                               Object {obj, ...} =>
+                               Object {obj,  dst=(ty,var), loc} =>
+                                  let
+                                     val sourceSeq = 
+                                        Push.toSourceSeq pushes
+                                     val sourceIndex : int =
+                                        case sourceSeq of
+                                           {sourceIndex}::_ => sourceIndex
+                                          | _ => 0
+                                  in
                                   {args = args,
                                    bytesAllocated = Bytes.+ (bytesAllocated,
                                                              Object.size
@@ -739,7 +747,8 @@ fun transform program =
                                    label = label,
                                    leaves = leaves,
                                    pushes = pushes,
-                                   statements = s :: statements}
+                                   statements = (Object {obj = obj, dst = (ty,var), loc = SOME sourceIndex}) :: statements}
+                                   end
                              | Profile ps =>
                                   let
                                      val shouldSplit =
