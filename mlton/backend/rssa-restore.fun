@@ -158,7 +158,7 @@ structure VarInfo =
                                      | h::_ => SOME h
   end
 
-fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t, loc: int option} vector}
+fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t, loc: int} vector}
   = let
       exception NoViolations
 
@@ -604,7 +604,7 @@ fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Objec
                      val {isNew, ty, var} = rewriteVarDef addPost var
                   in
                      if isNew
-                        then replaceDstOperand (st, {ty=ty, var=var}, NONE)
+                        then replaceDstOperand (st, {ty=ty, var=var}, 0)
                         else st
                   end)
             end

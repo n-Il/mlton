@@ -89,7 +89,7 @@ structure WordXVectorConsts =
                          val ty = Type.wordVector (WordXVector.elementSize wv)
                          val obj = Object.fromWordXVector wv
                       in
-                         List.push (newStatics, {dst = (var, ty), obj = obj,loc= NONE})
+                         List.push (newStatics, {dst = (var, ty), obj = obj,loc=0})
                          ; Operand.Var {var = var, ty = ty}
                       end)
                 | _ => Operand.Const c
@@ -144,7 +144,7 @@ structure RealConsts =
                                       {init = init,
                                        tycon = vecTycon}
                                 in
-                                   SOME {dst = (vecVar, vecTy), obj = obj, loc = NONE}
+                                   SOME {dst = (vecVar, vecTy), obj = obj, loc = 0}
                                 end
                   in
                      (add, newStatic)

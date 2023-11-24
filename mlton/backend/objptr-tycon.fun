@@ -52,7 +52,9 @@ fun toHeader (opt: t): WordX.t =
              WordX.lshift(WordX.fromWord(MLton.Random.rand(),WordSize.objptrHeader()),
                           WordX.fromIntInf(32,WordSize.objptrHeader())))
    else
-   WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
+   (print("hi")
+   ;WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
+   )
    )
 
 val stack = new ()

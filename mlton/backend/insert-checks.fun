@@ -987,7 +987,7 @@ fun transform (Program.T {functions, handlesSignals, main, objectTypes, profileI
                                                       {offset = Bytes.zero,
                                                        src = Operand.one flagWS}),
                                               tycon = flagsTycon}
-                                        ,loc = NONE
+                                        ,loc = 0
                                         }]))
                 else (objectTypes, statics))
          end

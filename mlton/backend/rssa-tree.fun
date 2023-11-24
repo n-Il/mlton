@@ -155,7 +155,7 @@ structure Statement =
                   src: Operand.t}
        | Object of {dst: Var.t * Type.t,
                     obj: Object.t,
-                    loc: int option}
+                    loc: int}
        | PrimApp of {args: Operand.t vector,
                      dst: (Var.t * Type.t) option,
                      prim: Type.t Prim.t}
@@ -791,7 +791,7 @@ structure Program =
                objectTypes: ObjectType.t vector,
                profileInfo: {sourceMaps: SourceMaps.t,
                              getFrameSourceSeqIndex: Label.t -> int option} option,
-               statics: {dst: Var.t * Type.t, obj: Object.t , loc: int option} vector}
+               statics: {dst: Var.t * Type.t, obj: Object.t , loc: int} vector}
 
       fun clear (T {functions, main, statics, ...}) =
          (List.foreach (functions, Function.clear)

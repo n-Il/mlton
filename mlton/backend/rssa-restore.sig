@@ -17,7 +17,7 @@ signature RSSA_RESTORE =
       include RSSA_RESTORE_STRUCTS
 
       val restoreFunction:
-         {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t,loc: int option} vector}
+         {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t,loc: int} vector}
          -> {main: Function.t, restore: Function.t -> Function.t}
       val restore: Program.t -> Program.t
    end

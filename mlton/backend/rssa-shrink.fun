@@ -19,7 +19,7 @@ in
    structure ApplyResult = ApplyResult
 end
 
-fun shrinkFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t} vector}:
+fun shrinkFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Object.t, loc: int} vector}:
    {main: unit -> Function.t, shrink: Function.t -> Function.t} =
    let
       val {get = varInfo: Var.t -> {occurrences: int ref,

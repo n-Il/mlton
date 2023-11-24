@@ -976,7 +976,7 @@ structure ObjptrRep =
                       obj = Object.Normal
                             {init = Vector.fromListRev init,
                              tycon = tycon}
-                      ,loc = NONE
+                      ,loc = 0
                     }]
              :: pre)
          end
@@ -1020,7 +1020,7 @@ structure ObjptrRep =
                       obj = Object.Sequence
                             {init = Vector.fromListRev init,
                              tycon = tycon}
-                     ,loc = NONE
+                     ,loc = 0
                              }]
              :: pre)
          end

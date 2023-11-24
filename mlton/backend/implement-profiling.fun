@@ -747,7 +747,7 @@ fun transform program =
                                    label = label,
                                    leaves = leaves,
                                    pushes = pushes,
-                                   statements = (Object {obj = obj, dst = (ty,var), loc = SOME sourceIndex}) :: statements}
+                                   statements = (Object {obj = obj, dst = (ty,var), loc = sourceIndex}) :: statements}
                                    end
                              | Profile ps =>
                                   let
