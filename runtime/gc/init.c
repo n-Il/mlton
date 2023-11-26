@@ -96,7 +96,7 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
             die ("@MLton heap-profiler missing argument(Output File Location).");
           //printf("Openning  a file at [%s] in the future\n",argv[i++]);
           s->heapProfilingFile = fopen(argv[i++], "wb");
-          s->heapProfilingFileTwo = fopen("testheapobj", "wb");
+          //s->heapProfilingFileTwo = fopen("testheapobj", "wb");
         } else if (0 == strcmp (arg, "heap-profiling-gc-survived")) {
           i++;
           s->heapProfilingGcSurvived = true;

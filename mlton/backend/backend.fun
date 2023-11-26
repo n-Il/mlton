@@ -597,7 +597,7 @@ fun toMachine (rssa: Rssa.Program.t) =
                                             volatile = false}
                   end
              | ObjptrTycon opt =>
-                  M.Operand.word (ObjptrTycon.toHeader opt)
+                  M.Operand.word (ObjptrTycon.toHeader (opt, 0))
              | Runtime f => runtimeOp f
              | SequenceOffset {base, index, offset, scale, ty} =>
                   let
@@ -649,10 +649,10 @@ fun toMachine (rssa: Rssa.Program.t) =
              | Move {dst, src} =>
                   move {dst = translateOperand dst,
                         src = translateOperand src}
-             | Object {dst = (dst, _), obj as Object.Normal {init, tycon},...} =>
+             | Object {dst = (dst, _), obj as Object.Normal {init, tycon},loc} =>
                   let
                      val dst = varOperand dst
-                     val header = ObjptrTycon.toHeader tycon
+                     val header = ObjptrTycon.toHeader (tycon, loc)
                      fun mkDst {offset, ty} =
                         M.Operand.Offset {base = dst,
                                           offset = offset,
@@ -665,10 +665,10 @@ fun toMachine (rssa: Rssa.Program.t) =
                                           size = Object.size (obj, {tyconTy = tyconTy})}
                       :: mkInit (init, mkDst))
                   end
-             | Object {dst = (dst, _), obj as Object.Sequence {init, tycon},...} =>
+             | Object {dst = (dst, _), obj as Object.Sequence {init, tycon},loc} =>
                   let
                      val dst = varOperand dst
-                     val header = ObjptrTycon.toHeader tycon
+                     val header = ObjptrTycon.toHeader (tycon, loc)
                      val elt = ObjectType.componentsSize (tyconTy tycon)
                      val (scale, mkIndex) =
                         case Scale.fromBytes elt of

@@ -86,6 +86,10 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         GC_header higher32mask = (GC_header)0xFFFFFFFF00000000;
         GC_header lower32mask = (GC_header)0x00000000FFFFFFFF;
         GC_header higher32 = (higher32mask & header) >> 32;
+        if (higher32 != 0)
+        {
+            printf("headertop32 = 0x%" PRIx64 "\n",higher32);
+        }
         if (s->heapProfilingGcSurvived){ 
             //increase unless increasing would run out of space
             if (higher32 < 4294967295){

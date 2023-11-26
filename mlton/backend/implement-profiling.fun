@@ -729,7 +729,7 @@ fun transform program =
                                 end
                              ;
                             case s of
-                               Object {obj,  dst=(ty,var), loc} =>
+                               Object {obj,  dst=(ty,var), ...} =>
                                   let
                                      val sourceSeq = 
                                         Push.toSourceSeq pushes

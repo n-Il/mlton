@@ -509,7 +509,7 @@ fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Objec
               else {ty=ty, var=var, isNew=false}
            end
 
-        fun replaceDstOperand (st, dst as {ty=dstTy, var=dstVar},loc)=
+        fun replaceDstOperand (st, dst as {ty=dstTy, var=dstVar})=
           let
              val tupleDst = (dstVar, dstTy)
           in
@@ -518,8 +518,8 @@ fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Objec
                    Statement.Bind {dst=tupleDst, pinned=pinned, src=src}
               | Statement.Move {src, ...} =>
                    Statement.Move {dst=Operand.Var dst, src=src}
-              | Statement.Object {obj, ...} =>
-                   Statement.Object {dst=tupleDst, obj = obj,loc = loc}
+              | Statement.Object {dst,obj,loc} =>
+                   Statement.Object {dst=tupleDst, obj = obj,loc=loc}
               | Statement.PrimApp {args, prim, ...} =>
                    Statement.PrimApp {args=args, dst=SOME tupleDst, prim=prim}
               | _ => st
@@ -604,7 +604,7 @@ fun restoreFunction {main: Function.t, statics: {dst: Var.t * Type.t, obj: Objec
                      val {isNew, ty, var} = rewriteVarDef addPost var
                   in
                      if isNew
-                        then replaceDstOperand (st, {ty=ty, var=var}, 0)
+                        then replaceDstOperand (st, {ty=ty, var=var})
                         else st
                   end)
             end

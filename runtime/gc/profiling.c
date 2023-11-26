@@ -273,15 +273,15 @@ void profileWrite (GC_state s, GC_profileData p, const char *fileName) {
   case PROFILE_COUNT:
     kind = "count\n";
     break;
-  case PROFILE_HEAP:
-    kind = "heap\n";
-    break;
   case PROFILE_NONE:
     die ("impossible PROFILE_NONE");
     // break;
-      s->profiling.data = profileMalloc (s);
+    s->profiling.data = profileMalloc (s);
   case PROFILE_TIME:
     kind = "time\n";
+    break;
+  case PROFILE_HEAP:
+    kind = "heap\n";
     break;
   default:
     kind = "";
@@ -417,12 +417,13 @@ void initProfiling (GC_state s) {
   else {
     s->profiling.isOn = TRUE;
     switch (s->profiling.kind) {
-    case PROFILE_HEAP:
-      //s->profiling.data = profileMalloc (s);
-      //need to figure out why this is required
-      break;
     case PROFILE_ALLOC:
     case PROFILE_COUNT:
+      s->profiling.data = profileMalloc (s);
+      break;
+    case PROFILE_HEAP:
+      //need to figure out why this is required
+      //looks like there's some code in here at ~322 that is #if not HAS_TIME_PROFILING
       s->profiling.data = profileMalloc (s);
       break;
     case PROFILE_NONE:

@@ -65,6 +65,7 @@ struct GC_state {
   GC_weak weaks; /* Linked list of (live) weak pointers */
   FILE *heapProfilingFile;
   FILE *heapProfilingFileTwo;
+  bool heapProfilingGcSurvived;
 };
 
 #endif /* (defined (MLTON_GC_INTERNAL_TYPES)) */

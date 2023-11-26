@@ -45,16 +45,24 @@ val layout = Layout.str o toString
    WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
 *)
 
-fun toHeader (opt: t): WordX.t =
+fun toHeader (opt: t, loc: int): WordX.t =
    ( 
    if false then 
+   (*Random Integer*)
    WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),
              WordX.lshift(WordX.fromWord(MLton.Random.rand(),WordSize.objptrHeader()),
                           WordX.fromIntInf(32,WordSize.objptrHeader())))
+   else if true then
+    (print("loc:" ^ (Int.toString(loc)) ^ "\n")
+    (*have to shift this over a bit*)
+    (*then xor it*)
+    ;WordX.orb(WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ()),
+             WordX.lshift(WordX.fromInt(loc,WordSize.objptrHeader()),
+                          WordX.fromIntInf(32,WordSize.objptrHeader())))
+    )
    else
-   (print("hi")
-   ;WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
-   )
+    (*original implementation*)
+    WordX.fromWord (Runtime.typeIndexToHeader (index opt), WordSize.objptrHeader ())
    )
 
 val stack = new ()

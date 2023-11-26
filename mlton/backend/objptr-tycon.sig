@@ -32,7 +32,7 @@ signature OBJPTR_TYCON =
       val layout: t -> Layout.t
       val new: unit -> t
       val setIndex: t * int -> unit
-      val toHeader: t -> WordX.t
+      val toHeader: t * int -> WordX.t
       val toString: t -> string
 
       (* See gc/object.h. *) 
