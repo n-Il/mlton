@@ -66,6 +66,8 @@ struct GC_state {
   FILE *heapProfilingFile;
   FILE *heapProfilingFileTwo;
   bool heapProfilingGcSurvived;
+  int heapProfilingGcSurvivedAccuracy;
+  int heapProfilingGcSurvivedCounter;
 };
 
 #endif /* (defined (MLTON_GC_INTERNAL_TYPES)) */

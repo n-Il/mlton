@@ -572,7 +572,7 @@ fun outputDeclarations
                                   val size = ObjectType.componentsSize (tyconTy tycon)
                                in
                                   print "{"
-                                  ; print (mkHeader tycon)
+                                  ; print (mkHeader (tycon,0))
                                   ; print ","
                                   ; print "},"
                                   ; print "{"
@@ -591,7 +591,7 @@ fun outputDeclarations
                                   ; print ","
                                   ; print (mkLength length)
                                   ; print ","
-                                  ; print (mkHeader tycon)
+                                  ; print (mkHeader (tycon,0))
                                   ; print ","
                                   ; print "},"
                                   ; (case (Object.deString arg, length > 0) of

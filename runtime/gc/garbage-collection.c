@@ -52,6 +52,16 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
 
   //Heap Profiling Code
   if (s->heapProfilingFile != NULL){ 
+    if (s->heapProfilingGcSurvived){ 
+        if(s->heapProfilingGcSurvivedCounter < 2){
+            //printf("increment:%d\n",s->heapProfilingGcSurvivedCounter);
+            s->heapProfilingGcSurvivedCounter = s->heapProfilingGcSurvivedAccuracy; 
+        } 
+        else{
+            //printf("skip:%d\n",s->heapProfilingGcSurvivedCounter);
+            s->heapProfilingGcSurvivedCounter -- ;
+        }
+    }
     //rusage is used to gather ms since program started execution
     struct rusage ru_hprofiling;
     uintmax_t time_hprofiling;
@@ -90,28 +100,31 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         {
             //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
             printf("headertop32 = %ld\n",higher32);
+            //printf("");
         }
         if (s->heapProfilingGcSurvived){ 
             //increase unless increasing would run out of space
-            if (higher32 < 4294967295){
-                GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));
-                *headerp = newheader;
-                //logging data
-                GC_header newhigher32 = higher32+1;
-                if (newhigher32 == 1){
-                    survives[0]++; 
-                }else if (newhigher32 == 2){
-                    survives[1]++; 
-                }else if (newhigher32 < 10){
-                    survives[2]++; 
-                }else if (newhigher32 < 50){
-                    survives[3]++; 
+            if(s->heapProfilingGcSurvivedCounter < 2){
+                if (higher32 < 4294967295){
+                    GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));
+                    *headerp = newheader;
+                    //logging data
+                    GC_header newhigher32 = higher32+1;
+                    if (newhigher32 == 1){
+                        survives[0]++; 
+                    }else if (newhigher32 == 2){
+                        survives[1]++; 
+                    }else if (newhigher32 < 10){
+                        survives[2]++; 
+                    }else if (newhigher32 < 50){
+                        survives[3]++; 
+                    }else{
+                        survives[4]++;
+                    }
                 }else{
+                    printf("Heap Profiling hitting max value for gc survived\n");
                     survives[4]++;
                 }
-            }else{
-                printf("Heap Profiling hitting max value for gc survived\n");
-                survives[4]++;
             }
 
 
