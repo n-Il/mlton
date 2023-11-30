@@ -12,7 +12,6 @@ void minorGC (GC_state s) {
 }
 
 void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
-  printf("major gc starting\n");
   uintmax_t numGCs;
   size_t desiredSize;
 
@@ -79,15 +78,14 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     //printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
     //locations
     uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
-    size_t locationObjects[s->sourceMaps.sourceNamesLength];
-    size_t locationSize[s->sourceMaps.sourceNamesLength];
+    size_t locationObjects[numberNames];
+    size_t locationSize[numberNames];
     if (s->heapProfilingLocation){
         for(uint32_t i = 0;i < numberNames; numberNames++){
             locationObjects[i] = 0;
             locationSize[i] = 0;
         }
     }
-    printf("debugginglength:%lu\n",sizeof(locationObjects));
 
     //start of code to traverse heap 
     pointer back;
@@ -171,6 +169,11 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
             uint32_t sourceCodeIndex = higher32; 
             //increment object
             printf("set fine\n");
+            printf("current index%d\n",sourceCodeIndex);
+            printf("num elements%ld\n",sizeof(locationObjects)/sizeof(size_t));
+            printf("size of array%ld\n",sizeof(locationSize));
+            printf("number of array elements supposedly%ld\n",s->sourceMaps.sourceNamesLength);
+            printf("element%lu\n",locationObjects[sourceCodeIndex]);
             locationObjects[sourceCodeIndex]++;
             //add size
             locationSize[sourceCodeIndex]+=size;
