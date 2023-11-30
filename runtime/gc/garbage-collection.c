@@ -68,10 +68,18 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     getrusage(RUSAGE_SELF, &ru_hprofiling);
     time_hprofiling = rusageTime (&ru_hprofiling);
 
-    //Write the time,live bytes, and heap size in bytes to the file
-    fwrite(&time_hprofiling,sizeof(uintmax_t),1,s->heapProfilingFile);
-    fwrite(&s->heap.oldGenSize,sizeof(size_t),1,s->heapProfilingFile);//same as lastMajorStatistics.bytesLive
-    fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
+    size_t object_count = 0;
+
+    //lifetimes 1 2 3 4 5 <10 <100 <1000 <10000 <100000 <1000000 <10000000 and longer
+    size_t survives[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+    size_t survivesSize[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    //debugging code
+    //printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
+    //locations
+    uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
+    size_t locationObjects[s->sourceMaps.sourceNamesLength] = {};
+    size_t locationSize[s->sourceMaps.sourceNamesLength] = {};
 
     //start of code to traverse heap 
     pointer back;
@@ -82,66 +90,144 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     size_t size;
     front = alignFrontier (s, s->heap.start);
     back = s->heap.start + s->heap.oldGenSize;
-    updateObject://end condition
+    updateObject:
     if (front == back)
         goto done;
     p = advanceToObjectData (s, front);
     headerp = getHeaderp (p);
     header = *headerp;
+    size = sizeofObject (s, p);
     if (GC_VALID_HEADER_MASK & header){
+        object_count++;
         GC_header higher32mask = (GC_header)0xFFFFFFFF00000000;
         GC_header lower32mask = (GC_header)0x00000000FFFFFFFF;
         GC_header higher32 = (higher32mask & header) >> 32;
         if (s->heapProfilingGcSurvived){ 
-            printf("heap profiling gc survived code is turned off/broken rn \n");
             //increase unless increasing would run out of space
             if(s->heapProfilingGcSurvivedCounter < 2){
                 if (higher32 < 4294967295){
+                    //increment
                     GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));
                     *headerp = newheader;
                     //logging data
                     GC_header newhigher32 = higher32+1;
-                    /*if (newhigher32 == 1){
+                    if (newhigher32 == 1){
                         survives[0]++; 
+                        survivesSize[0]+=size; 
                     }else if (newhigher32 == 2){
                         survives[1]++; 
-                    }else if (newhigher32 < 10){
+                        survivesSize[1]+=size; 
+                    }else if (newhigher32 == 3){
                         survives[2]++; 
-                    }else if (newhigher32 < 50){
+                        survivesSize[2]+=size; 
+                    }else if (newhigher32 == 4){
                         survives[3]++; 
-                    }else{
+                        survivesSize[3]+=size; 
+                    }else if (newhigher32 == 5){
                         survives[4]++;
-                    }*/
+                        survivesSize[4]+=size; 
+                    }else if (newhigher32 < 10){
+                        survives[5]++;
+                        survivesSize[5]+=size; 
+                    }else if (newhigher32 < 100){
+                        survives[6]++;
+                        survivesSize[6]+=size; 
+                    }else if (newhigher32 < 1000){
+                        survives[7]++;
+                        survivesSize[7]+=size; 
+                    }else if (newhigher32 < 10000){
+                        survives[8]++;
+                        survivesSize[8]+=size; 
+                    }else if (newhigher32 < 100000){
+                        survives[9]++;
+                        survivesSize[9]+=size; 
+                    }else if (newhigher32 < 1000000){
+                        survives[10]++;
+                        survivesSize[10]+=size; 
+                    }else if (newhigher32 < 10000000){
+                        survives[11]++;
+                        survivesSize[11]+=size; 
+                    }else {
+                        survives[12]++;
+                        survivesSize[12]+=size; 
+                    }
                 }else{
-                    printf("Heap Profiling hitting max value for gc survived\n");
-                    //survives[4]++;
+                    //printf("Heap Profiling hitting max value for gc survived\n");
+                    survives[12]++;
+                    survivesSize[12]+=size; 
                 }
                 
             }
-        }else{//else we can put in the source code location
-            uint32_t sourceCodeIndex = higher32;
-            const char *res;
-            res = getSourceName(s,sourceCodeIndex);
-            printf("source index of object we are looking at : %d\n",sourceCodeIndex);
-            printf("source name of object we are looking at : %s\n",res);
+        }else if (s->heapProfilingLocation){
+            uint32_t sourceCodeIndex = higher32; 
+            //increment object
+            locationObjects[sourceCodeIndex]++;
+            //add size
+            locationSize[sourceCodeIndex]+=size;
         }
     }else{
         printf("unexpected header at heap profiling code");
     }
-    size = sizeofObject (s, p);
+
     front += size;
     goto updateObject;
     done:
-    /*if (s->heapProfilingGcSurvived){
-        fwrite(&survives[0],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&survives[1],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&survives[2],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&survives[3],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&survives[4],sizeof(int),1,s->heapProfilingFile);
-    }else{//source indexing 
-    }*/
-    printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
     //end of code to traverse heap 
+    
+    //Write the time,live bytes,heap size, number of objects
+    fwrite(&time_hprofiling,sizeof(uintmax_t),1,s->heapProfilingFile);
+    fwrite(&s->heap.oldGenSize,sizeof(size_t),1,s->heapProfilingFile);//same as lastMajorStatistics.bytesLive
+    fwrite(&s->heap.size,sizeof(size_t),1,s->heapProfilingFile);
+    fwrite(&object_count,sizeof(size_t),1,s->heapProfilingFile);
+
+    //if we are doing lifetimes then write that data after
+    if (s->heapProfilingGcSurvived){
+        fwrite(&survives[0],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[1],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[2],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[3],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[4],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[5],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[6],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[7],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[8],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[9],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[10],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[11],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survives[12],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[0],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[1],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[2],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[3],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[4],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[5],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[6],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[7],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[8],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[9],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[10],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[11],sizeof(size_t),1,s->heapProfilingFile);
+        fwrite(&survivesSize[12],sizeof(size_t),1,s->heapProfilingFile);
+    }
+
+    if(s->heapProfilingLocation){
+        for(i = 0; i < numberNames, numberNames++){
+            //write out the #objects for every location
+            fwrite(&locationObjects,sizeof(size_t),1,s->heapProfilingFile);  
+            //write out the objectsumsize for every location
+            fwrite(&locationSize,sizeof(size_t),1,s->heapProfilingFile);  
+            //write out how many characters are in the length string
+            const char *res;
+            res = getSourceName(s,i);
+            size_t len = strlen(res)
+            fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);  
+            //write out the location string
+            fwrite(&res,sizeof(char),len,s->heapProfilingFile);  
+            //printf("source index of object we are looking at : %d\n",sourceCodeIndex);
+            //printf("source name of object we are looking at : %s\n",res);
+        }
+    }
+
   }
 }
 

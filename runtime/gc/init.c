@@ -437,5 +437,23 @@ int GC_init (GC_state s, int argc, char **argv) {
     assert (invariantForMutator (s, TRUE, TRUE));
   }
   s->amInGC = FALSE;
+  //If heap profiling , write some data to the file to tell the visualizer what's up
+  if(s->heapProfilingFile != NULL){
+        printf("debugging: location:%d lifetime:%d accuracy:%d numberlocations:%d \n",
+            s->heapProfilingLocation,
+            s->heapProfilingGcSurvived,
+            (s->heapProfilingGcSurvived) ? s->heapProfilingGcSurvivedAccuracy : 0
+            (s->heapProfilingLocation) ? s->sourceMaps.sourceNamesLength : 0
+            );
+        fwrite(&s->heapProfilingLocation,sizeof(bool),1,s->heapProfilingFile);
+        fwrite(&s->heapProfilingGcSurvived,sizeof(bool),1,s->heapProfilingFile);
+        fwrite( ((s->heapProfilingGcSurvived) ? &s->heapProfilingGcSurvivedAccuracy : 0) ,sizeof(int),1,s->heapProfilingFile);
+        fwrite( ((s->heapProfilingLocation) ? &s->sourceMaps.sourceNamesLength : 0) ,sizeof(uint32_t),1,s->heapProfilingFile);
+        /*if (s->heapProfilingGcSurvived) {
+            fwrite(&s->heapProfilingGcSurvivedAccuracy,sizeof(int),1,s->heapProfilingFile);
+        }else{
+            fwrite(0,sizeof(int),1,s->heapProfilingFile);
+        }*/
+  }
   return res;
 }
