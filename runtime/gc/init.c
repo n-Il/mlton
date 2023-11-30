@@ -90,26 +90,28 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
         char *arg;
 
         arg = argv[i];
-        if (0 == strcmp (arg, "heap-profiling")) {
+        if (0 == strcmp (arg, "heap-profiling-file")) {
           i++;
           if (i == argc || 0 == strcmp (argv[i], "--"))
-            die ("@MLton heap-profiler missing argument(Output File Location).");
+            die ("@MLton heap-profiling missing argument(Output File Location).");
           s->heapProfilingFile = fopen(argv[i++], "wb");
-        } else if (0 == strcmp (arg, "heap-profiling-Location")) {
+        } else if (0 == strcmp (arg, "heap-profiling-location")) {
           i++;
-          if (i == argc || 0 == strcmp (argv[i], "--"))
-            die ("@MLton heap-profiler missing argument(Output File Location).");
-          s->heapProfilingFile = fopen(argv[i++], "wb");
+          if(s->heapProfilingFile == NULL){
+              die ("@MLton heap-profiling-location requires heap-profiling-file argument set first");
+          }
           s->heapProfilingLocation = true;
-        } else if (0 == strcmp (arg, "heap-profiling-GCS")) {
+        } else if (0 == strcmp (arg, "heap-profiling-lifetime")) {
           i++;
+          if (s->profiling.kind == PROFILE_HEAP){
+              die ("@MLton heap-profiling-lifetime cannot be used when compiled with profiling heap(the top 32 bits of object header used to count GCs have source locations in them).");
+          }
           if (i == argc || 0 == strcmp (argv[i], "--"))
-            die ("@MLton heap-profiling-GCS missing argument(how many GCs per increment counter(set to 1 for 1:1)).");
-          if (s->profiling.kind == "heap\n"){
-              die ("@MLton heap-profiling-GCS cannot be used when compiled with profiling heap(the top 32 bits of object header used to count GCs have source locations in them).");
+            die ("@MLton heap-profiling-lifetime missing argument(how many GCs per increment counter(set to 1 for 1:1)).");
+          if(s->heapProfilingFile == NULL){
+              die ("@MLton heap-profiling-lifetime requires heap-profiling-file argument set first");
           }
           int heapprofgcsarg = atoi(argv[i++]);
-          s->heapProfilingFile = fopen(argv[i++], "wb");
           s->heapProfilingGcSurvivedCounter = heapprofgcsarg;//this should be expanded to a different function when have time
           s->heapProfilingGcSurvivedAccuracy = heapprofgcsarg;//this should be expanded to a different function when have time
           s->heapProfilingGcSurvived = true;
