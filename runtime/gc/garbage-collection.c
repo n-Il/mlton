@@ -230,7 +230,6 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
             fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);  
             //write out the location string
             fwrite(&res,sizeof(char),len,s->heapProfilingFile);  
-            //printf("source index of object we are looking at : %d\n",sourceCodeIndex);
         }
     }
 
