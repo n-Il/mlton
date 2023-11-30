@@ -80,7 +80,7 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     size_t locationObjects[numberNames];
     size_t locationSize[numberNames];
     if (s->heapProfilingLocation){
-        for(uint32_t i = 0;i < numberNames; numberNames++){
+        for(uint32_t i = 0;i < numberNames; i++){
             locationObjects[i] = 0;
             locationSize[i] = 0;
         }
@@ -166,6 +166,7 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         }else if (s->heapProfilingLocation){
             uint32_t sourceIndex = higher32; 
             //get sourceNameIndex from sourceIndex
+            //TODO:at implement profiling we can copy code like toSourceSeq and pattern match slightly differentl to get there
             uint32_t sourceNameIndex = s->sourceMaps.sources[sourceIndex].sourceNameIndex;
             //increment object
             locationObjects[sourceNameIndex]++;
@@ -218,18 +219,11 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     }
 
     if(s->heapProfilingLocation){
-        for(uint32_t i = 0;i < numberNames; numberNames++){
+        for(uint32_t i = 0;i < numberNames; i++){
             //write out the #objects for every location
             fwrite(&locationObjects[i],sizeof(size_t),1,s->heapProfilingFile);  
             //write out the objectsumsize for every location
             fwrite(&locationSize[i],sizeof(size_t),1,s->heapProfilingFile);  
-            //write out how many characters are in the length string
-            const char *res;
-            res = getSourceName(s,i);
-            size_t len = strlen(res);
-            fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);  
-            //write out the location string
-            fwrite(&res,sizeof(char),len,s->heapProfilingFile);  
         }
     }
 

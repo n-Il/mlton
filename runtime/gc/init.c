@@ -447,6 +447,18 @@ int GC_init (GC_state s, int argc, char **argv) {
         int bufferzero = 0;
         fwrite( ((s->heapProfilingGcSurvived) ? &s->heapProfilingGcSurvivedAccuracy : &bufferzero) ,sizeof(int),1,s->heapProfilingFile);
         fwrite( ((s->heapProfilingLocation) ? &s->sourceMaps.sourceNamesLength : &bufferzero32) ,sizeof(uint32_t),1,s->heapProfilingFile);
+        if (s->heapProfilingLocation){
+             uint32_t numberNames = s->sourceMaps.sourceNamesLength;
+             for(uint32_t i = 0;i < numberNames; i++){
+                const char *res;
+                res = s->sourceMaps.sourceNames[i];
+                printf("%u %s\n",i,res);
+                size_t len = strlen(res);
+                fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);
+                //write out the location string
+                fwrite(&res,sizeof(char),len,s->heapProfilingFile);
+             }
+        }
   }
   s->amInGC = FALSE;
   return res;
