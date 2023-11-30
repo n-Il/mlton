@@ -97,6 +97,9 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
           s->heapProfilingFile = fopen(argv[i++], "wb");
         } else if (0 == strcmp (arg, "heap-profiling-location")) {
           i++;
+          if (s->profiling.kind != PROFILE_HEAP){
+              die ("@MLton heap-profiling-location requires the executible to be compiled with heap profiling (mlton -profile heap _.sml)");
+          }
           if(s->heapProfilingFile == NULL){
               die ("@MLton heap-profiling-location requires heap-profiling-file argument set first");
           }
@@ -442,13 +445,17 @@ int GC_init (GC_state s, int argc, char **argv) {
         printf("debugging: location:%d lifetime:%d accuracy:%d numberlocations:%d \n",
             s->heapProfilingLocation,
             s->heapProfilingGcSurvived,
-            (s->heapProfilingGcSurvived) ? s->heapProfilingGcSurvivedAccuracy : 0
-            (s->heapProfilingLocation) ? s->sourceMaps.sourceNamesLength : 0
+            ((s->heapProfilingGcSurvived) ? s->heapProfilingGcSurvivedAccuracy : 0),
+            ((s->heapProfilingLocation) ? s->sourceMaps.sourceNamesLength : 0)
             );
         fwrite(&s->heapProfilingLocation,sizeof(bool),1,s->heapProfilingFile);
         fwrite(&s->heapProfilingGcSurvived,sizeof(bool),1,s->heapProfilingFile);
-        fwrite( ((s->heapProfilingGcSurvived) ? &s->heapProfilingGcSurvivedAccuracy : 0) ,sizeof(int),1,s->heapProfilingFile);
-        fwrite( ((s->heapProfilingLocation) ? &s->sourceMaps.sourceNamesLength : 0) ,sizeof(uint32_t),1,s->heapProfilingFile);
+        /*uint32_t testingzero = 0;
+        int testingzerotwo = 0;
+        fwrite( ((s->heapProfilingGcSurvived) ? &s->heapProfilingGcSurvivedAccuracy : &testingzerotwo) ,sizeof(int),1,s->heapProfilingFile);
+        fwrite( ((s->heapProfilingLocation) ? &s->sourceMaps.sourceNamesLength : &testingzero) ,sizeof(uint32_t),1,s->heapProfilingFile);
+        */
+        printf("debugging not issue with fwrites");
         /*if (s->heapProfilingGcSurvived) {
             fwrite(&s->heapProfilingGcSurvivedAccuracy,sizeof(int),1,s->heapProfilingFile);
         }else{

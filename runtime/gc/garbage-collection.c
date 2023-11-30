@@ -78,8 +78,12 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     //printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
     //locations
     uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
-    size_t locationObjects[s->sourceMaps.sourceNamesLength] = {};
-    size_t locationSize[s->sourceMaps.sourceNamesLength] = {};
+    size_t locationObjects[s->sourceMaps.sourceNamesLength];
+    size_t locationSize[s->sourceMaps.sourceNamesLength];
+    for(uint32_t i = 0;i < numberNames; numberNames++){
+        locationObjects[i] = 0;
+        locationSize[i] = 0;
+    }
 
     //start of code to traverse heap 
     pointer back;
@@ -211,15 +215,15 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     }
 
     if(s->heapProfilingLocation){
-        for(i = 0; i < numberNames, numberNames++){
+        for(uint32_t i = 0;i < numberNames; numberNames++){
             //write out the #objects for every location
-            fwrite(&locationObjects,sizeof(size_t),1,s->heapProfilingFile);  
+            fwrite(&locationObjects[i],sizeof(size_t),1,s->heapProfilingFile);  
             //write out the objectsumsize for every location
-            fwrite(&locationSize,sizeof(size_t),1,s->heapProfilingFile);  
+            fwrite(&locationSize[i],sizeof(size_t),1,s->heapProfilingFile);  
             //write out how many characters are in the length string
             const char *res;
             res = getSourceName(s,i);
-            size_t len = strlen(res)
+            size_t len = strlen(res);
             fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);  
             //write out the location string
             fwrite(&res,sizeof(char),len,s->heapProfilingFile);  
