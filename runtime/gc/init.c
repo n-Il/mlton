@@ -94,18 +94,25 @@ int processAtMLton (GC_state s, int start, int argc, char **argv,
           i++;
           if (i == argc || 0 == strcmp (argv[i], "--"))
             die ("@MLton heap-profiler missing argument(Output File Location).");
-          //printf("Openning  a file at [%s] in the future\n",argv[i++]);
           s->heapProfilingFile = fopen(argv[i++], "wb");
-          //s->heapProfilingFileTwo = fopen("testheapobj", "wb");
+        } else if (0 == strcmp (arg, "heap-profiling-Location")) {
+          i++;
+          if (i == argc || 0 == strcmp (argv[i], "--"))
+            die ("@MLton heap-profiler missing argument(Output File Location).");
+          s->heapProfilingFile = fopen(argv[i++], "wb");
+          s->heapProfilingLocation = true;
         } else if (0 == strcmp (arg, "heap-profiling-GCS")) {
           i++;
           if (i == argc || 0 == strcmp (argv[i], "--"))
-            die ("@MLton heap-profiling-GCS missing argument(how many GCs per increment counter).");
+            die ("@MLton heap-profiling-GCS missing argument(how many GCs per increment counter(set to 1 for 1:1)).");
+          if (s->profiling.kind == "heap\n"){
+              die ("@MLton heap-profiling-GCS cannot be used when compiled with profiling heap(the top 32 bits of object header used to count GCs have source locations in them).");
+          }
           int heapprofgcsarg = atoi(argv[i++]);
+          s->heapProfilingFile = fopen(argv[i++], "wb");
           s->heapProfilingGcSurvivedCounter = heapprofgcsarg;//this should be expanded to a different function when have time
           s->heapProfilingGcSurvivedAccuracy = heapprofgcsarg;//this should be expanded to a different function when have time
           s->heapProfilingGcSurvived = true;
-
         } else if (0 == strcmp (arg, "copy-generational-ratio")) {
           i++;
           if (i == argc || 0 == strcmp (argv[i], "--"))
@@ -357,6 +364,7 @@ int GC_init (GC_state s, int argc, char **argv) {
   s->weaks = NULL;
   s->saveWorldStatus = true;
   s->heapProfilingFile = NULL;
+  s->heapProfilingLocation = false;
   s->heapProfilingGcSurvived = false;
   s->heapProfilingGcSurvivedCounter = 0;
 

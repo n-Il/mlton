@@ -734,9 +734,11 @@ fun transform program =
                                      val sourceSeq = 
                                         Push.toSourceSeq pushes
                                      val sourceIndex : int =
-                                        case sourceSeq of
-                                           {sourceIndex}::_ => sourceIndex
-                                          | _ => 0
+                                        if profile = ProfileHeap then 
+                                           case sourceSeq of
+                                              {sourceIndex}::_ => sourceIndex
+                                              | _ => 0
+                                        else 0
                                   in
                                   {args = args,
                                    bytesAllocated = Bytes.+ (bytesAllocated,

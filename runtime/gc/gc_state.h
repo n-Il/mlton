@@ -66,6 +66,7 @@ struct GC_state {
   FILE *heapProfilingFile;
   FILE *heapProfilingFileTwo;
   bool heapProfilingGcSurvived;
+  bool heapProfilingLocation;
   int heapProfilingGcSurvivedAccuracy;
   int heapProfilingGcSurvivedCounter;
 };

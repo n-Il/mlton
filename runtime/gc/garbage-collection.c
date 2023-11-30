@@ -82,11 +82,7 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     size_t size;
     front = alignFrontier (s, s->heap.start);
     back = s->heap.start + s->heap.oldGenSize;
-    int mods[] = {0,0,0,0,0};
-    // 1,2,lt10, lt50, gte50
-    int survives[] = {0,0,0,0,0};
-    updateObject:
-    //end condition
+    updateObject://end condition
     if (front == back)
         goto done;
     p = advanceToObjectData (s, front);
@@ -96,13 +92,8 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         GC_header higher32mask = (GC_header)0xFFFFFFFF00000000;
         GC_header lower32mask = (GC_header)0x00000000FFFFFFFF;
         GC_header higher32 = (higher32mask & header) >> 32;
-        if (higher32 != 0)
-        {
-            //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
-            printf("headertop32 = %ld\n",higher32);
-            //printf("");
-        }
         if (s->heapProfilingGcSurvived){ 
+            printf("heap profiling gc survived code is turned off/broken rn \n");
             //increase unless increasing would run out of space
             if(s->heapProfilingGcSurvivedCounter < 2){
                 if (higher32 < 4294967295){
@@ -110,7 +101,7 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
                     *headerp = newheader;
                     //logging data
                     GC_header newhigher32 = higher32+1;
-                    if (newhigher32 == 1){
+                    /*if (newhigher32 == 1){
                         survives[0]++; 
                     }else if (newhigher32 == 2){
                         survives[1]++; 
@@ -120,30 +111,19 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
                         survives[3]++; 
                     }else{
                         survives[4]++;
-                    }
+                    }*/
                 }else{
                     printf("Heap Profiling hitting max value for gc survived\n");
-                    survives[4]++;
+                    //survives[4]++;
                 }
+                
             }
-
-
-        }else{
-            int randomModFive = higher32 % 5;
-            //printf("header = 0x%" PRIx64 "\n",header);
-            //printf("headertop32 = 0x%" PRIx64 "\n",higher32);
-            //printf("mod5 = %d\n",randomModFive);
-            if (randomModFive == 0){
-                mods[0]++;
-            } else if (randomModFive == 1){
-                mods[1]++;
-            } else if (randomModFive == 2){
-                mods[2]++;
-            } else if (randomModFive == 3){
-                mods[3]++;
-            } else if (randomModFive == 4){
-                mods[4]++;
-            }
+        }else{//else we can put in the source code location
+            uint32_t sourceCodeIndex = higher32;
+            const char *res;
+            res = getSourceName(s,sourceCodeIndex);
+            printf("source index of object we are looking at : %d\n",sourceCodeIndex);
+            printf("source name of object we are looking at : %s\n",res);
         }
     }else{
         printf("unexpected header at heap profiling code");
@@ -152,19 +132,15 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     front += size;
     goto updateObject;
     done:
-    if (s->heapProfilingGcSurvived){
+    /*if (s->heapProfilingGcSurvived){
         fwrite(&survives[0],sizeof(int),1,s->heapProfilingFile);
         fwrite(&survives[1],sizeof(int),1,s->heapProfilingFile);
         fwrite(&survives[2],sizeof(int),1,s->heapProfilingFile);
         fwrite(&survives[3],sizeof(int),1,s->heapProfilingFile);
         fwrite(&survives[4],sizeof(int),1,s->heapProfilingFile);
-    }else{ 
-        fwrite(&mods[0],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&mods[1],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&mods[2],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&mods[3],sizeof(int),1,s->heapProfilingFile);
-        fwrite(&mods[4],sizeof(int),1,s->heapProfilingFile);
-    }
+    }else{//source indexing 
+    }*/
+    printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
     //end of code to traverse heap 
   }
 }
