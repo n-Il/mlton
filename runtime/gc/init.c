@@ -452,10 +452,9 @@ int GC_init (GC_state s, int argc, char **argv) {
              for(uint32_t i = 0;i < numberNames; i++){
                 const char *res;
                 res = s->sourceMaps.sourceNames[i];
-                printf("%u %s\n",i,res);
+                //printf("%u %s\n",i,res);
                 size_t len = strlen(res);
                 fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);
-                //write out the location string
                 fwrite(&res,sizeof(char),len,s->heapProfilingFile);
              }
         }
