@@ -74,10 +74,9 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     size_t survives[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
     size_t survivesSize[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-    //debugging code
-    //printf("number of source locations:%d\n",s->sourceMaps.sourceNamesLength);
     //locations
-    uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
+    //uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
+    uint32_t numberNames = s->sourceMaps.sourcesLength;//really numberSources
     size_t locationObjects[numberNames];
     size_t locationSize[numberNames];
     if (s->heapProfilingLocation){
@@ -165,19 +164,11 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
                 
             }
         }else if (s->heapProfilingLocation){
-            printf("else if loc\n");
-            uint32_t sourceCodeIndex = higher32; 
+            uint32_t sci = higher32; 
             //increment object
-            printf("set fine\n");
-            printf("current index%d\n",sourceCodeIndex);
-            printf("num elements%ld\n",sizeof(locationObjects)/sizeof(size_t));
-            printf("size of array%ld\n",sizeof(locationSize));
-            printf("number of array elements supposedly%ld\n",s->sourceMaps.sourceNamesLength);
-            printf("element%lu\n",locationObjects[sourceCodeIndex]);
-            locationObjects[sourceCodeIndex]++;
+            locationObjects[sci]++;
             //add size
-            locationSize[sourceCodeIndex]+=size;
-            printf("did things\n");
+            locationSize[sci]+=size;
         }
     }else{
         printf("unexpected header at heap profiling code\n");
@@ -228,23 +219,17 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         printf("debug1\n");
         for(uint32_t i = 0;i < numberNames; numberNames++){
             //write out the #objects for every location
-            printf("debug2\n");
             fwrite(&locationObjects[i],sizeof(size_t),1,s->heapProfilingFile);  
             //write out the objectsumsize for every location
-            printf("debug3\n");
             fwrite(&locationSize[i],sizeof(size_t),1,s->heapProfilingFile);  
             //write out how many characters are in the length string
             const char *res;
             res = getSourceName(s,i);
             size_t len = strlen(res);
-            printf("debug4\n");
             fwrite(&len,sizeof(size_t),1,s->heapProfilingFile);  
             //write out the location string
-            printf("debug5\n");
             fwrite(&res,sizeof(char),len,s->heapProfilingFile);  
-            printf("debug6\n");
             //printf("source index of object we are looking at : %d\n",sourceCodeIndex);
-            //printf("source name of object we are looking at : %s\n",res);
         }
     }
 
