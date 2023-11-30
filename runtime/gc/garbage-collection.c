@@ -75,8 +75,8 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     size_t survivesSize[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
 
     //locations
-    //uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
-    uint32_t numberNames = s->sourceMaps.sourcesLength;//really numberSources
+    uint32_t numberNames = s->sourceMaps.sourceNamesLength; 
+    //uint32_t numberNames = s->sourceMaps.sourcesLength;//really numberSources
     size_t locationObjects[numberNames];
     size_t locationSize[numberNames];
     if (s->heapProfilingLocation){
@@ -164,11 +164,13 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
                 
             }
         }else if (s->heapProfilingLocation){
-            uint32_t sci = higher32; 
+            uint32_t sourceIndex = higher32; 
+            //get sourceNameIndex from sourceIndex
+            uint32_t sourceNameIndex = s->sourceMaps.sources[sourceIndex].sourceNameIndex;
             //increment object
-            locationObjects[sci]++;
+            locationObjects[sourceNameIndex]++;
             //add size
-            locationSize[sci]+=size;
+            locationSize[sourceNameIndex]+=size;
         }
     }else{
         printf("unexpected header at heap profiling code\n");
