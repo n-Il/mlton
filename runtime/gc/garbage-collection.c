@@ -216,7 +216,6 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
     }
 
     if(s->heapProfilingLocation){
-        printf("debug1\n");
         for(uint32_t i = 0;i < numberNames; numberNames++){
             //write out the #objects for every location
             fwrite(&locationObjects[i],sizeof(size_t),1,s->heapProfilingFile);  
