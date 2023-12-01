@@ -10,37 +10,107 @@ import matplotlib.dates
 from datetime import datetime,timezone,timedelta
 
 
-def read_in_data(location):
-    objects = []
-    datapoints = []
-    counter = 1
+
+
+def parse_data(location):
     with open(location,"rb") as f:
+        #bool location profiling
+        location_profiling_bool = int.from_bytes(f.read(1),"little") 
+        print("location_profiling_bool:"+str(location_profiling_bool))
+        #bool lifetime profiling
+        lifetime_profiling_bool = int.from_bytes(f.read(1),"little") 
+        print("lifetime_profiling_bool:"+str(lifetime_profiling_bool))
+        #int accuracy
+        lifetime_accuracy_int = int.from_bytes(f.read(4),"little") 
+        print("lifetime_accuracy_int:"+str(lifetime_accuracy_int))
+        #uint32_t sourcenameslength
+        location_source_names_length_uint32_t = int.from_bytes(f.read(4),"little") 
+        print("location_source_names_length_uint32_t:"+str(location_source_names_length_uint32_t))
+        #if location profiling is true then 
+        if location_profiling_bool:
+            #for x from 0 to sourceNamesLength
+            for x in range(location_source_names_length_uint32_t):
+                #size_t len
+                source_string_len_size_t = int.from_bytes(f.read(8),"little")
+                print("source_string_len_size_t:"+str(source_string_len_size_t))
+                #bytes of string
+                source_name_string = f.read(source_string_len_size_t).decode()
+                print("source_name_string:"+source_name_string)
+        counter = 1
         while (b := f.read(8)):
-            datapoints.append(
-            (
-            counter,
-            int.from_bytes(b,"little"),
-            int.from_bytes(f.read(8),"little"),
-            int.from_bytes(f.read(8),"little"),
-            int.from_bytes(f.read(4),"little"),
-            int.from_bytes(f.read(4),"little"),
-            int.from_bytes(f.read(4),"little"),
-            int.from_bytes(f.read(4),"little"),
-            int.from_bytes(f.read(4),"little"),
-            ))
-            counter += 1
-    return datapoints
+            #uintmax_t time in ms
+            time_in_ms_uintmax_t = int.from_bytes(b,"little")
+            print("time_in_ms_uintmax_t:"+str(time_in_ms_uintmax_t))
+            #size_t utilization
+            heap_live_bytes_size_t = int.from_bytes(f.read(8),"little")
+            print("heap_live_bytes_size_t:"+str(heap_live_bytes_size_t))
+            #size_t heap total size
+            heap_total_size_size_t = int.from_bytes(f.read(8),"little")
+            print("heap_total_size_size_t:"+str(heap_total_size_size_t))
+            #size_t object count
+            heap_num_objects_size_t = int.from_bytes(f.read(8),"little")
+            print("heap_num_objects_size_t:"+str(heap_num_objects_size_t))
+            #if gc survived
+            if (lifetime_profiling_bool == 1):
+                #lifetimes 1 2 3 4 5 <10 <100 <1000 <10000 <100000 <1000000 <10000000 and longer
+                num_objects_per_lifetime = [0] * 13
+                sum_size_objects_per_lifetime = [0] * 13
+                #read 13 size_t #obj array
+                for i in range(13):
+                    num_objects_per_lifetime[i] = int.from_bytes(f.read(8),"little") 
+                print("num_objects_per_lifetime:"+str(num_objects_per_lifetime))
+                #read 13 size_t sumsizeobj array
+                for i in range(13):
+                    sum_size_objects_per_lifetime[i] = int.from_bytes(f.read(8),"little") 
+                print("sum_size_objects_per_lifetime:"+str(sum_size_objects_per_lifetime))
+            #if location
+            if (location_profiling_bool == 1):
+                #for x from 0 to sourceNamesLength
+                num_objects_per_location = [0] * location_source_names_length_uint32_t
+                sum_size_objects_per_location = [0] * location_source_names_length_uint32_t
+
+                for i in range(location_source_names_length_uint32_t):    
+                    # number objects with this source size_t
+                    num_objects_per_location[i] = int.from_bytes(f.read(8),"little") 
+                    # sum size of objects with source  size_t
+                    sum_size_objects_per_location[i] = int.from_bytes(f.read(8),"little") 
+                print("num_objects_per_location:"+str(num_objects_per_location))
+                print("sum_size_objects_per_location:"+str(sum_size_objects_per_location))
+        ba = bytearray(f.read())
+        for b in ba:
+            print("leftover bytes")
+    return
+
+#TODO: cut this out after working
+#def read_in_data(location):
+#    objects = []
+#    datapoints = []
+#    counter = 1
+#    with open(location,"rb") as f:
+#        while (b := f.read(8)):
+#            datapoints.append(
+#            (
+#            counter,
+#            int.from_bytes(b,"little"),
+#            int.from_bytes(f.read(8),"little"),
+#            int.from_bytes(f.read(8),"little"),
+#            int.from_bytes(f.read(4),"little"),
+#            int.from_bytes(f.read(4),"little"),
+#            int.from_bytes(f.read(4),"little"),
+#            int.from_bytes(f.read(4),"little"),
+#            int.from_bytes(f.read(4),"little"),
+#            ))
+#            counter += 1
+#    return datapoints
 
 def main():
     if len(sys.argv) < 2:
         print("give the file location that you output using @MLton heap-profiling <filename> --")
     else:
-        datapoints = read_in_data(sys.argv[1])
-        #for datapoint in datapoints:
-        #    print(datapoint)
-        #graphs
-        graph_one(datapoints)
-        graph_five(datapoints)
+        parse_data(sys.argv[1])
+        #datapoints = read_in_data(sys.argv[1])
+        #graph_one(datapoints)
+        #graph_five(datapoints)
     return
 
 
