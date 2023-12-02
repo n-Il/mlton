@@ -151,7 +151,8 @@ def main():
         number_objects_per_ms_graph(data)
         live_data_and_heap_size_per_gc_graph(data)
         live_data_and_heap_size_per_ms_graph(data)
-        #if loc then those graphs
+        if data["location_profiling"]: 
+            count_sources,size_sources = get_15(data)
             #top 10 and rest bundled count per location per gc
             #top 10 and rest bundled count per location per ms
             #top 10 and rest bundled sum_size per location per gc
@@ -345,6 +346,76 @@ def count_objects_per_lifetime_per_ms_graph(data):
     plt.legend(legend_strings)
 
     return
+
+
+#return the top <=15 index in an array
+#return the source names of those <=15 in an array
+def get_15(data):
+    appearances_per_source = [0] * data["source_names_length"]
+    sum_bytes_per_source = [0] * data["source_names_length"]
+    sum_count_per_source = [0] * data["source_names_length"]
+    for gc in data["garbage_collections"]:
+        for i in range(data["source_names_length"]):
+            if gc["objects_per_location"][i] > 0:
+                appearances_per_source[i] += 1
+                sum_count_per_source[i] += gc["objects_per_location"][i] 
+            if gc["bytes_per_location"][i] > 0: 
+                sum_bytes_per_source[i] += gc["bytes_per_location"][i]
+    average_bytes_per_source_per_appearance = []
+    average_count_per_source_per_appearance = []
+    for i in range(data["source_names_length"]):
+        if appearances_per_source[i] > 0:
+            average_bytes_per_source_per_appearance.append( (i,(sum_bytes_per_source[i]//appearances_per_source[i])) )
+            average_count_per_source_per_appearance.append( (i,(sum_count_per_source[i]//appearances_per_source[i])) )
+        else:
+            average_bytes_per_source_per_appearance.append((i,0))
+            average_count_per_source_per_appearance.append((i,0))
+    sorted_averages_count = sorted(average_count_per_source_per_appearance,key=lambda d: d[1],reverse=True)
+    sorted_averages_bytes = sorted(average_bytes_per_source_per_appearance,key=lambda d: d[1],reverse=True)
+    count_sources_to_identify = []
+    size_sources_to_identify = []
+    for i in range((15 if data["source_names_length"] >= 15 else len(data["source_names_length"]))):
+        count_sources_to_identify.append( (sorted_averages_count[i][0],data["source_names"][i]) )
+        size_sources_to_identify.append( (sorted_averages_bytes[i][0],data["source_names"][i]) )
+    return (count_sources_to_identify,size_sources_to_identify)
+
+def count_objects_per_location_per_gc_graph(data,important_count_indexes,important_size_indexes):
+    plt.figure("Object Count per Location by Milliseconds Passed")
+    x = []#gc time_ms
+    y = []#the counts per index we care about + sum rest
+    num_areas = len(important_count_indexes)+1
+    for i in range(num_areas):
+        y.append([])
+
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Number Of Objects")
+
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        for i in range(13):
+            y[i].append(gc["objects_per_lifetime"][i])
+
+    plt.stackplot(x,[y1,..])
+    
+    legend_strings = []
+    for i in range(13):
+        if i == 0:
+            legend_strings.append("1<=x<="+str(lifetimes[0]))
+        elif i == 12:
+            legend_strings.append("x>="+str(lifetimes[-1]))
+        elif i > 4:
+            legend_strings.append(str(lifetimes[i-1])+"<=x<"+str(lifetimes[i]))
+        else:
+            legend_strings.append(str(lifetimes[i-1])+"<x<="+str(lifetimes[i]))
+    plt.legend(legend_strings)
+
+    return
+
+
+#top 15 or less based on average count and rest bundled count per location per gc
+#top 15 or less based on average count and rest bundled count per location per ms
+#top 15 or less based on average sum bytes and rest bundled sum_size per location per gc
+#top 15 or less based on average sum bytes and rest bundled sum_size per location per ms
 
 if __name__ == '__main__':
     main()
