@@ -154,10 +154,9 @@ def main():
         if data["location_profiling"]: 
             count_sources,size_sources = get_15(data)
             count_objects_per_location_per_gc_graph(data,count_sources)
-            #top 10 and rest bundled count per location per gc
-            #top 10 and rest bundled count per location per ms
-            #top 10 and rest bundled sum_size per location per gc
-            #top 10 and rest bundled sum_size per location per ms
+            count_objects_per_location_per_ms_graph(data,count_sources)
+            sum_size_objects_per_location_per_gc_graph(data,size_sources)
+            sum_size_objects_per_location_per_ms_graph(data,size_sources)
         if data["lifetime_profiling"]: 
             sum_objects_size_per_lifetime_per_gc_graph(data)
             sum_objects_size_per_lifetime_per_ms_graph(data)
@@ -380,11 +379,9 @@ def get_15(data):
         size_sources_to_identify.append( (sorted_averages_bytes[i][0],data["source_names"][i]) )
     return (count_sources_to_identify,size_sources_to_identify)
 
-#top 15 or less based on average count and rest bundled count per location per gc
 def count_objects_per_location_per_gc_graph(data,important_count_indices):
-    print(important_count_indices)
-    plt.figure("Object Count per Location by Milliseconds Passed")
-    x = []#gc time_ms
+    plt.figure("Object Count per Location per Garbage Collection")
+    x = []
     y = []#the counts per index we care about + sum rest
     num_areas = len(important_count_indices)
     for i in range(num_areas+1):
@@ -395,7 +392,7 @@ def count_objects_per_location_per_gc_graph(data,important_count_indices):
         legend_strings.append(" " + important_count_indices[i][1])
     legend_strings.append("The Rest")
     
-    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.xlabel("GC Number")
     plt.ylabel("Number Of Objects")
 
     for gc in data["garbage_collections"]:
@@ -416,10 +413,108 @@ def count_objects_per_location_per_gc_graph(data,important_count_indices):
     plt.legend(legend_strings)
     return
 
+def count_objects_per_location_per_ms_graph(data,important_count_indices):
+    plt.figure("Object Count per Location by Milliseconds Passed")
+    x = []
+    y = []#the counts per index we care about + sum rest
+    num_areas = len(important_count_indices)
+    for i in range(num_areas+1):
+        y.append([])
 
-#top 15 or less based on average count and rest bundled count per location per ms
-#top 15 or less based on average sum bytes and rest bundled sum_size per location per gc
-#top 15 or less based on average sum bytes and rest bundled sum_size per location per ms
+    legend_strings = []
+    for i in range(num_areas):
+        legend_strings.append(" " + important_count_indices[i][1])
+    legend_strings.append("The Rest")
+    
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Number Of Objects")
+
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        for i in range(num_areas+1):
+            y[i].append(0)
+        #for each index
+        for i in range(data["source_names_length"]):
+            #for each label
+            for j in range(num_areas+1):
+                #if not in our labels then add to rest
+                if j == num_areas:
+                    y[j][-1] += (gc["objects_per_location"][i])
+                #if this data falls under label then add
+                elif important_count_indices[j][0] == i:
+                    y[j][-1] += (gc["objects_per_location"][i])
+    plt.stackplot(x,y) 
+    plt.legend(legend_strings)
+    return
+
+def sum_size_objects_per_location_per_ms_graph(data,important_indices):
+    plt.figure("Data Utilization per Location by Milliseconds Passed")
+    x = []
+    y = []#the counts per index we care about + sum rest
+    num_areas = len(important_indices)
+    for i in range(num_areas+1):
+        y.append([])
+
+    legend_strings = []
+    for i in range(num_areas):
+        legend_strings.append(" " + important_indices[i][1])
+    legend_strings.append("The Rest")
+    
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Objects Sum Bytes")
+
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        for i in range(num_areas+1):
+            y[i].append(0)
+        #for each index
+        for i in range(data["source_names_length"]):
+            #for each label
+            for j in range(num_areas+1):
+                #if not in our labels then add to rest
+                if j == num_areas:
+                    y[j][-1] += (gc["bytes_per_location"][i])
+                #if this data falls under label then add
+                elif important_indices[j][0] == i:
+                    y[j][-1] += (gc["bytes_per_location"][i])
+    plt.stackplot(x,y) 
+    plt.legend(legend_strings)
+    return
+
+def sum_size_objects_per_location_per_gc_graph(data,important_indices):
+    plt.figure("Data Utilization per Location per Garbage Collection")
+    x = []
+    y = []#the counts per index we care about + sum rest
+    num_areas = len(important_indices)
+    for i in range(num_areas+1):
+        y.append([])
+
+    legend_strings = []
+    for i in range(num_areas):
+        legend_strings.append(" " + important_indices[i][1])
+    legend_strings.append("The Rest")
+    
+    plt.xlabel("GC Number")
+    plt.ylabel("Objects Sum Bytes")
+
+    for gc in data["garbage_collections"]:
+        x.append(gc["#"])
+        for i in range(num_areas+1):
+            y[i].append(0)
+        #for each index
+        for i in range(data["source_names_length"]):
+            #for each label
+            for j in range(num_areas+1):
+                #if not in our labels then add to rest
+                if j == num_areas:
+                    y[j][-1] += (gc["bytes_per_location"][i])
+                #if this data falls under label then add
+                elif important_indices[j][0] == i:
+                    y[j][-1] += (gc["bytes_per_location"][i])
+    plt.stackplot(x,y) 
+    plt.legend(legend_strings)
+    return
+
 
 if __name__ == '__main__':
     main()
