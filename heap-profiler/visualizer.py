@@ -19,6 +19,30 @@ UINT32_T_BYTE_SIZE = 4
 SIZE_T_BYTE_SIZE = 8
 UINTMAX_T_BYTE_SIZE = 8
 
+# Data dictionary
+# "location_profiling" BOOL
+# "lifetime_profiling" BOOL
+# "lifetime_accuracy" INT
+# if location_profiling" 
+#   "source_names_length" INT
+#   "source_names" LIST of STRING
+# garbage_collections LIST OF {
+#   "#" INT
+#   "time_ms" INT
+#   "live_data" INT
+#   "total_size" INT
+#   "num_objects" INT
+#   if "lifetime_profiling"
+#       "objects_per_lifetime" LIST of INT
+#       "bytes_per_lifetime" LIST of INT
+#   if location_profiling 
+#       "objects_per_location" LIST of INT
+#       "bytes_per_location" LIST of INT
+# }
+
+#in the case of lifetimes we are doing are split by these values
+#lifetimes 1 2 3 4 5 <10 <100 <1000 <10000 <100000 <1000000 <10000000 and longer
+
 #reads the profiling data from file to dictionary
 def read_data(location, debug = False):
     data = dict()
@@ -116,36 +140,200 @@ def read_data(location, debug = False):
                 print("leftover byte")
     return data
 
-#TODO: cut this out after working
-#def read_in_data(location):
-#    objects = []
-#    datapoints = []
-#    counter = 1
-#    with open(location,"rb") as f:
-#        while (b := f.read(8)):
-#            datapoints.append(
-#            (
-#            counter,
-#            int.from_bytes(b,"little"),
-#            int.from_bytes(f.read(8),"little"),
-#            int.from_bytes(f.read(8),"little"),
-#            int.from_bytes(f.read(4),"little"),
-#            int.from_bytes(f.read(4),"little"),
-#            int.from_bytes(f.read(4),"little"),
-#            int.from_bytes(f.read(4),"little"),
-#            int.from_bytes(f.read(4),"little"),
-#            ))
-#            counter += 1
-#    return datapoints
-
 def main():
     if len(sys.argv) < 2:
         print("give the file location that you output using @MLton heap-profiling <filename> --")
     else:
         data = read_data(sys.argv[1])
-        #normal graphs 
+        #graphs regardless of options
+        number_objects_per_gc_graph(data)
+        number_objects_per_ms_graph(data)
+        live_data_and_heap_size_per_gc_graph(data)
+        live_data_and_heap_size_per_ms_graph(data)
         #if loc then those graphs
-        #if life then those graphs
+            #top 10 and rest bundled count per location per gc
+            #top 10 and rest bundled count per location per ms
+            #top 10 and rest bundled sum_size per location per gc
+            #top 10 and rest bundled sum_size per location per ms
+        if data["lifetime_profiling"]: 
+            sum_objects_size_per_lifetime_per_gc_graph(data)
+            sum_objects_size_per_lifetime_per_ms_graph(data)
+            count_objects_per_lifetime_per_gc_graph(data) 
+            count_objects_per_lifetime_per_ms_graph(data)
+
+    return
+
+def number_objects_per_gc_graph(data):
+    #GRAPH 1 
+    plt.figure("Live Objects per Garbage Collection")
+    x = []#gc #
+    y = []#gc num_objects
+    for gc in data["garbage_collections"]:
+        x.append(gc["#"])
+        y.append(gc["num_objects"])
+    plt.xlabel("GC Number")
+    plt.ylabel("Number of Live Objects")
+    plt.plot(x,y)
+    #the following code can be used to add on-hover effects to the plot
+    #dots = plt.scatter(x,y,color='none')
+    #cursor(dots,hover=True)
+    plt.show()
+    return
+
+def number_objects_per_ms_graph(data):
+    #GRAPH 1 
+    plt.figure("Live Objects by Milliseconds Passed")
+    x = []#gc time_ms
+    y = []#gc num_objects
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        y.append(gc["num_objects"])
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Number of Live Objects")
+    plt.plot(x,y)
+    plt.show()
+    return
+
+def live_data_and_heap_size_per_gc_graph(data):
+    plt.figure("Heap Size and Live Data in Bytes per Garbage Collection")
+    x12 = []#gc #
+    y1 = []#gc total_size
+    y2 = []#gc live_data
+    for gc in data["garbage_collections"]:
+        x12.append(gc["#"])
+        y1.append(gc["total_size"]-gc["live_data"])
+        y2.append(gc["live_data"])
+    plt.xlabel("GC Number")
+    plt.ylabel("Heap Size and Live Data in Bytes")
+    plt.stackplot(x12,[y2,y1])
+    #plt.xticks(gc_ts_double_line[0])
+    #plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
+    #dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
+    #cursor(dots,hover=True)
+    #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    plt.show()
+    return
+
+def live_data_and_heap_size_per_ms_graph(data):
+    plt.figure("Heap Size and Live Data in Bytes by Milliseconds Passed")
+    x12 = []#gc time_ms
+    y1 = []#gc total_size
+    y2 = []#gc live_data
+    for gc in data["garbage_collections"]:
+        x12.append(gc["time_ms"])
+        y1.append(gc["total_size"]-gc["live_data"])
+        y2.append(gc["live_data"])
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Heap Size and Live Data in Bytes")
+    plt.stackplot(x12,[y2,y1])
+    #plt.xticks(gc_ts_double_line[0])
+    #plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
+    #dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
+    #cursor(dots,hover=True)
+    #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    plt.show()
+    return
+
+def sum_objects_size_per_lifetime_per_gc_graph(data):
+    plt.figure("Data Utilization of Lifetime Magnitudes per GC(until I figure out legend it's low survived at bottom)")
+    x = []#gc #
+    accuracy = data["lifetime_accuracy"]
+    lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
+    y = ([],[],[],[],[],[],[],[],[],[],[],[],[])
+    for gc in data["garbage_collections"]:
+        x.append(gc["#"])
+        for i in range(13):
+            y[i].append(gc["bytes_per_lifetime"][i])
+    plt.xlabel("GC Number")
+    ylabelstr = ""
+    counter = 0
+    for val in lifetimes:
+        if counter > 4:
+            ylabelstr+="<"
+        counter+=1
+        ylabelstr+=str(val)
+        ylabelstr+=","
+    ylabelstr += "or greater GC-survived"
+    plt.ylabel(ylabelstr)
+    plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+    plt.show()
+    return
+
+def sum_objects_size_per_lifetime_per_ms_graph(data):
+    plt.figure("Data utilization of Lifetime Magnitudes by Elapsed Milliseconds(until I figure out legend it's low survived at bottom)")
+    x = []#gc time_ms
+    accuracy = data["lifetime_accuracy"]
+    lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
+    y = ([],[],[],[],[],[],[],[],[],[],[],[],[])
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        for i in range(13):
+            y[i].append(gc["bytes_per_lifetime"][i])
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    ylabelstr = ""
+    counter = 0
+    for val in lifetimes:
+        if counter > 4:
+            ylabelstr+="<"
+        counter+=1
+        ylabelstr+=str(val)
+        ylabelstr+=","
+    ylabelstr += "or greater GC-survived"
+    plt.ylabel(ylabelstr)
+    plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+    plt.show()
+    return
+
+def count_objects_per_lifetime_per_gc_graph(data):
+    plt.figure("Object Count of Lifetime Magnitudes per GC(legend needs adding)")
+    x = []#gc #
+    accuracy = data["lifetime_accuracy"]
+    lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
+    y = ([],[],[],[],[],[],[],[],[],[],[],[],[])
+    for gc in data["garbage_collections"]:
+        x.append(gc["#"])
+        for i in range(13):
+            y[i].append(gc["objects_per_lifetime"][i])
+    plt.xlabel("GC Number")
+    ylabelstr = ""
+    counter = 0
+    for val in lifetimes:
+        if counter > 4:
+            ylabelstr+="<"
+        counter+=1
+        ylabelstr+=str(val)
+        ylabelstr+=","
+    ylabelstr += "or greater GC-survived"
+    plt.ylabel(ylabelstr)
+    for i in range(13):
+        plt.plot(x,y[i])
+    plt.show()
+    return
+
+def count_objects_per_lifetime_per_ms_graph(data):
+    plt.figure("Object Count of Lifetime Magnitudes per GC(legend needs adding)")
+    x = []#gc time_ms
+    accuracy = data["lifetime_accuracy"]
+    lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
+    y = ([],[],[],[],[],[],[],[],[],[],[],[],[])
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        for i in range(13):
+            y[i].append(gc["objects_per_lifetime"][i])
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    ylabelstr = ""
+    counter = 0
+    for val in lifetimes:
+        if counter > 4:
+            ylabelstr+="<"
+        counter+=1
+        ylabelstr+=str(val)
+        ylabelstr+=","
+    ylabelstr += "or greater GC-survived"
+    plt.ylabel(ylabelstr)
+    for i in range(13):
+        plt.plot(x,y[i])
+    plt.show()
     return
 
 
