@@ -53,13 +53,13 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
   //Heap Profiling Code
   if (s->heapProfilingFile != NULL){ 
     if (s->heapProfilingGcSurvived){ 
-        if(s->heapProfilingGcSurvivedCounter < 2){
+        if(s->heapProfilingGcSurvivedCounter == s->heapProfilingGcSurvivedAccuracy){
             //printf("increment:%d\n",s->heapProfilingGcSurvivedCounter);
-            s->heapProfilingGcSurvivedCounter = s->heapProfilingGcSurvivedAccuracy; 
+            s->heapProfilingGcSurvivedCounter = 1; 
         } 
         else{
             //printf("skip:%d\n",s->heapProfilingGcSurvivedCounter);
-            s->heapProfilingGcSurvivedCounter -- ;
+            s->heapProfilingGcSurvivedCounter ++;
         }
     }
     //rusage is used to gather ms since program started execution
@@ -109,7 +109,7 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
         GC_header higher32 = (higher32mask & header) >> 32;
         if (s->heapProfilingGcSurvived){ 
             //increase unless increasing would run out of space
-            if(s->heapProfilingGcSurvivedCounter < 2){
+            if(s->heapProfilingGcSurvivedCounter == 1){
                 if (higher32 < 4294967295){
                     //increment
                     GC_header newheader =  (((higher32 + 1) << 32) | (lower32mask & header));

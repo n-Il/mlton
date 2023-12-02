@@ -177,6 +177,8 @@ def number_objects_per_gc_graph(data):
     #the following code can be used to add on-hover effects to the plot
     #dots = plt.scatter(x,y,color='none')
     #cursor(dots,hover=True)
+
+
     return
 
 def number_objects_per_ms_graph(data):
@@ -201,9 +203,11 @@ def live_data_and_heap_size_per_gc_graph(data):
         y1.append(gc["total_size"])
         y2.append(gc["live_data"])
     plt.xlabel("GC Number")
-    plt.ylabel("Heap Size and Live Data in Bytes")
+    plt.ylabel("Bytes")
     plt.plot(x12,y1)
     plt.plot(x12,y2)
+
+    plt.legend(["Heap Size","Live Data"])
 
     #plt.xticks(gc_ts_double_line[0])
     #plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
@@ -222,13 +226,16 @@ def live_data_and_heap_size_per_ms_graph(data):
         y1.append(gc["total_size"])
         y2.append(gc["live_data"])
     plt.xlabel("Elapsed Milliseconds of Execution ")
-    plt.ylabel("Heap Size and Live Data in Bytes")
+    plt.ylabel("Bytes")
     plt.plot(x12,y1)
     plt.plot(x12,y2)
+
+    plt.legend(["Heap Size","Live Data"])
+
     return
 
 def sum_objects_size_per_lifetime_per_gc_graph(data):
-    plt.figure("Data Utilization of Lifetime Magnitudes per GC(until I figure out legend it's low survived at bottom)")
+    plt.figure("Data Utilization of Lifetime Magnitudes per GC")
     x = []#gc #
     accuracy = data["lifetime_accuracy"]
     lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
@@ -238,21 +245,25 @@ def sum_objects_size_per_lifetime_per_gc_graph(data):
         for i in range(13):
             y[i].append(gc["bytes_per_lifetime"][i])
     plt.xlabel("GC Number")
-    ylabelstr = ""
-    counter = 0
-    for val in lifetimes:
-        if counter > 4:
-            ylabelstr+="<"
-        counter+=1
-        ylabelstr+=str(val)
-        ylabelstr+=","
-    ylabelstr += "or greater GC-survived"
-    plt.ylabel(ylabelstr)
+    plt.ylabel("Objects Sum Bytes")
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+
+    legend_strings = []
+    for i in range(13):
+        if i == 0:
+            legend_strings.append("1<=x<="+str(lifetimes[0]))
+        elif i == 12:
+            legend_strings.append("x>="+str(lifetimes[-1]))
+        elif i > 4:
+            legend_strings.append(str(lifetimes[i-1])+"<=x<"+str(lifetimes[i]))
+        else:
+            legend_strings.append(str(lifetimes[i-1])+"<x<="+str(lifetimes[i]))
+    plt.legend(legend_strings)
+
     return
 
 def sum_objects_size_per_lifetime_per_ms_graph(data):
-    plt.figure("Data utilization of Lifetime Magnitudes by Elapsed Milliseconds(until I figure out legend it's low survived at bottom)")
+    plt.figure("Data utilization of Lifetime Magnitudes by Elapsed Milliseconds")
     x = []#gc time_ms
     accuracy = data["lifetime_accuracy"]
     lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
@@ -262,21 +273,25 @@ def sum_objects_size_per_lifetime_per_ms_graph(data):
         for i in range(13):
             y[i].append(gc["bytes_per_lifetime"][i])
     plt.xlabel("Elapsed Milliseconds of Execution ")
-    ylabelstr = ""
-    counter = 0
-    for val in lifetimes:
-        if counter > 4:
-            ylabelstr+="<"
-        counter+=1
-        ylabelstr+=str(val)
-        ylabelstr+=","
-    ylabelstr += "or greater GC-survived"
-    plt.ylabel(ylabelstr)
+    plt.ylabel("Objects Sum Bytes")
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+
+    legend_strings = []
+    for i in range(13):
+        if i == 0:
+            legend_strings.append("1<=x<="+str(lifetimes[0]))
+        elif i == 12:
+            legend_strings.append("x>="+str(lifetimes[-1]))
+        elif i > 4:
+            legend_strings.append(str(lifetimes[i-1])+"<=x<"+str(lifetimes[i]))
+        else:
+            legend_strings.append(str(lifetimes[i-1])+"<x<="+str(lifetimes[i]))
+    plt.legend(legend_strings)
+
     return
 
 def count_objects_per_lifetime_per_gc_graph(data):
-    plt.figure("Object Count of Lifetime Magnitudes per GC(legend needs adding)")
+    plt.figure("Object Count of Lifetime Magnitudes per GC")
     x = []#gc #
     accuracy = data["lifetime_accuracy"]
     lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
@@ -286,23 +301,25 @@ def count_objects_per_lifetime_per_gc_graph(data):
         for i in range(13):
             y[i].append(gc["objects_per_lifetime"][i])
     plt.xlabel("GC Number")
-    ylabelstr = ""
-    counter = 0
-    for val in lifetimes:
-        if counter > 4:
-            ylabelstr+="<"
-        counter+=1
-        ylabelstr+=str(val)
-        ylabelstr+=","
-    ylabelstr += "or greater GC-survived"
-    plt.ylabel(ylabelstr)
-    #for i in range(13):
-    #    plt.plot(x,y[i])
+    plt.ylabel("Number of Objects")
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+
+    legend_strings = []
+    for i in range(13):
+        if i == 0:
+            legend_strings.append("1<=x<="+str(lifetimes[0]))
+        elif i == 12:
+            legend_strings.append("x>="+str(lifetimes[-1]))
+        elif i > 4:
+            legend_strings.append(str(lifetimes[i-1])+"<=x<"+str(lifetimes[i]))
+        else:
+            legend_strings.append(str(lifetimes[i-1])+"<x<="+str(lifetimes[i]))
+    plt.legend(legend_strings)
+
     return
 
 def count_objects_per_lifetime_per_ms_graph(data):
-    plt.figure("Object Count of Lifetime Magnitudes by Milliseconds Passed(legend needs adding)")
+    plt.figure("Object Count of Lifetime Magnitudes by Milliseconds Passed")
     x = []#gc time_ms
     accuracy = data["lifetime_accuracy"]
     lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
@@ -312,19 +329,21 @@ def count_objects_per_lifetime_per_ms_graph(data):
         for i in range(13):
             y[i].append(gc["objects_per_lifetime"][i])
     plt.xlabel("Elapsed Milliseconds of Execution ")
-    ylabelstr = ""
-    counter = 0
-    for val in lifetimes:
-        if counter > 4:
-            ylabelstr+="<"
-        counter+=1
-        ylabelstr+=str(val)
-        ylabelstr+=","
-    ylabelstr += "or greater GC-survived"
-    plt.ylabel(ylabelstr)
-    #for i in range(13):
-    #    plt.plot(x,y[i])
+    plt.ylabel("Number Of Objects")
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
+    
+    legend_strings = []
+    for i in range(13):
+        if i == 0:
+            legend_strings.append("1<=x<="+str(lifetimes[0]))
+        elif i == 12:
+            legend_strings.append("x>="+str(lifetimes[-1]))
+        elif i > 4:
+            legend_strings.append(str(lifetimes[i-1])+"<=x<"+str(lifetimes[i]))
+        else:
+            legend_strings.append(str(lifetimes[i-1])+"<x<="+str(lifetimes[i]))
+    plt.legend(legend_strings)
+
     return
 
 if __name__ == '__main__':
