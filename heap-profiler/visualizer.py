@@ -147,18 +147,12 @@ def main():
         print("give the file location that you output using @MLton heap-profiling <filename> --")
     else:
         data = read_data(sys.argv[1])
-        for gc in data["garbage_collections"]: 
-            #print("DEBUG numobjects"+str(gc["num_objects"]))
-            objcount = 0
-            for obj in gc["objects_per_location"]:
-                objcount+= obj
-            #print("DEBUG SUM"+str(objcount))
+        #debug(data)
         number_objects_per_gc_graph(data)
         number_objects_per_ms_graph(data)
         live_data_and_heap_size_per_gc_graph(data)
         live_data_and_heap_size_per_ms_graph(data)
         if data["location_profiling"]: 
-            graph_all_code_locations(data)
             count_sources,size_sources = get_15(data)
             count_objects_per_location_per_gc_graph(data,count_sources)
             count_objects_per_location_per_ms_graph(data,count_sources)
@@ -187,6 +181,18 @@ def number_objects_per_gc_graph(data):
     #cursor(dots,hover=True)
 
 
+    return
+
+def debug(data):
+    plt.figure("debug")
+    x = []#gc time_ms
+    y = []#gc num_objects
+    for gc in data["garbage_collections"]:
+        x.append(gc["time_ms"])
+        y.append(gc["live_data"])
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("debug")
+    plt.plot(x,y)
     return
 
 def number_objects_per_ms_graph(data):
@@ -379,111 +385,83 @@ def get_15(data):
             average_count_per_source_per_appearance.append((i,0))
     sorted_averages_count = sorted(average_count_per_source_per_appearance,key=lambda d: d[1],reverse=True)
     sorted_averages_bytes = sorted(average_bytes_per_source_per_appearance,key=lambda d: d[1],reverse=True)
-    count_sources_to_identify = []
-    size_sources_to_identify = []
+    count_sources_to_identify = dict()
+    size_sources_to_identify = dict()
     for i in range((15 if data["source_names_length"] >= 15 else len(data["source_names_length"]))):
-        count_sources_to_identify.append( (sorted_averages_count[i][0],data["source_names"][i]) )
-        size_sources_to_identify.append( (sorted_averages_bytes[i][0],data["source_names"][i]) )
+        count_sources_to_identify[sorted_averages_count[i][0]] = data["source_names"][sorted_averages_count[i][0]]
+        size_sources_to_identify[sorted_averages_bytes[i][0]] = data["source_names"][sorted_averages_bytes[i][0]]
     return (count_sources_to_identify,size_sources_to_identify)
 
-def count_objects_per_location_per_gc_graph(data,important_count_indices):
+def count_objects_per_location_per_gc_graph(data,important_indices):
     plt.figure("Object Count per Location per Garbage Collection")
     x = []
     y = []#the counts per index we care about + sum rest
-    num_areas = len(important_count_indices)
+    indices = list(important_indices.keys())
+    #create y coordinate arrays
+    num_areas = len(important_indices.keys())
     for i in range(num_areas+1):
         y.append([])
-
+    #create legend
     legend_strings = []
     for i in range(num_areas):
-        legend_strings.append(" " + important_count_indices[i][1])
+        legend_strings.append(" " + important_indices[indices[i]])
     legend_strings.append("The Rest")
-    
+    #labels
     plt.xlabel("GC Number")
     plt.ylabel("Number Of Objects")
-
+    #for each gc
     for gc in data["garbage_collections"]:
+        #add x data gc number
         x.append(gc["#"])
+        #initialize all values to 0 for this gc
         for i in range(num_areas+1):
-            y[i].append(0)
-        #for each index
+            y[i].append(0) 
+        #for each location
         for i in range(data["source_names_length"]):
-            #for each label
-            for j in range(num_areas+1):
-                #if not in our labels then add to rest
-                if j == num_areas:
-                    y[j][-1] += (gc["objects_per_location"][i])
-                #if this data falls under label then add
-                elif important_count_indices[j][0] == i:
-                    y[j][-1] += (gc["objects_per_location"][i])
+            count = gc["objects_per_location"][i]
+            #if the object count we are looking at is in the 15
+            if i in indices:
+                y[indices.index(i)][-1]+=count
+            else:
+                y[num_areas][-1]+=count
+            #if i in indices the
     plt.stackplot(x,y) 
     plt.legend(legend_strings)
     return
 
-def count_objects_per_location_per_ms_graph(data,important_count_indices):
+def count_objects_per_location_per_ms_graph(data,important_indices):
     plt.figure("Object Count per Location by Milliseconds Passed")
     x = []
     y = []#the counts per index we care about + sum rest
-    num_areas = len(important_count_indices)
+    indices = list(important_indices.keys())
+    #create y coordinate arrays
+    num_areas = len(important_indices.keys())
     for i in range(num_areas+1):
         y.append([])
-
+    #create legend
     legend_strings = []
     for i in range(num_areas):
-        legend_strings.append(" " + important_count_indices[i][1])
+        legend_strings.append(" " + important_indices[indices[i]])
     legend_strings.append("The Rest")
-    
+    #labels
     plt.xlabel("Elapsed Milliseconds of Execution ")
     plt.ylabel("Number Of Objects")
-
+    #for each gc
     for gc in data["garbage_collections"]:
+        #add x data time
         x.append(gc["time_ms"])
+        #initialize all values to 0 for this gc
         for i in range(num_areas+1):
-            y[i].append(0)
-        #for each index
+            y[i].append(0) 
+        #for each location
         for i in range(data["source_names_length"]):
-            #for each label
-            for j in range(num_areas+1):
-                #if not in our labels then add to rest
-                if j == num_areas:
-                    y[j][-1] += (gc["objects_per_location"][i])
-                #if this data falls under label then add
-                elif important_count_indices[j][0] == i:
-                    y[j][-1] += (gc["objects_per_location"][i])
-    plt.stackplot(x,y) 
-    plt.legend(legend_strings)
-    return
-
-def sum_size_objects_per_location_per_ms_graph(data,important_indices):
-    plt.figure("Data Utilization per Location by Milliseconds Passed")
-    x = []
-    y = []#the counts per index we care about + sum rest
-    num_areas = len(important_indices)
-    for i in range(num_areas+1):
-        y.append([])
-
-    legend_strings = []
-    for i in range(num_areas):
-        legend_strings.append(" " + important_indices[i][1])
-    legend_strings.append("The Rest")
-    
-    plt.xlabel("Elapsed Milliseconds of Execution ")
-    plt.ylabel("Objects Sum Bytes")
-
-    for gc in data["garbage_collections"]:
-        x.append(gc["time_ms"])
-        for i in range(num_areas+1):
-            y[i].append(0)
-        #for each index
-        for i in range(data["source_names_length"]):
-            #for each label
-            for j in range(num_areas+1):
-                #if not in our labels then add to rest
-                if j == num_areas:
-                    y[j][-1] += (gc["bytes_per_location"][i])
-                #if this data falls under label then add
-                elif important_indices[j][0] == i:
-                    y[j][-1] += (gc["bytes_per_location"][i])
+            count = gc["objects_per_location"][i]
+            #if the object count we are looking at is in the 15
+            if i in indices:
+                y[indices.index(i)][-1]+=count
+            else:
+                y[num_areas][-1]+=count
+            #if i in indices the
     plt.stackplot(x,y) 
     plt.legend(legend_strings)
     return
@@ -492,55 +470,75 @@ def sum_size_objects_per_location_per_gc_graph(data,important_indices):
     plt.figure("Data Utilization per Location per Garbage Collection")
     x = []
     y = []#the counts per index we care about + sum rest
-    num_areas = len(important_indices)
+    indices = list(important_indices.keys())
+    #create y coordinate arrays
+    num_areas = len(important_indices.keys())
     for i in range(num_areas+1):
         y.append([])
-
+    #create legend
     legend_strings = []
     for i in range(num_areas):
-        legend_strings.append(" " + important_indices[i][1])
+        legend_strings.append(" " + important_indices[indices[i]])
     legend_strings.append("The Rest")
-    
+    #labels
     plt.xlabel("GC Number")
     plt.ylabel("Objects Sum Bytes")
-
+    #for each gc
     for gc in data["garbage_collections"]:
+        #add x data gc number
         x.append(gc["#"])
+        #initialize all values to 0 for this gc
         for i in range(num_areas+1):
-            y[i].append(0)
-        #for each index
+            y[i].append(0) 
+        #for each location
         for i in range(data["source_names_length"]):
-            #for each label
-            for j in range(num_areas+1):
-                #if not in our labels then add to rest
-                if j == num_areas:
-                    y[j][-1] += (gc["bytes_per_location"][i])
-                #if this data falls under label then add
-                elif important_indices[j][0] == i:
-                    y[j][-1] += (gc["bytes_per_location"][i])
+            count = gc["bytes_per_location"][i]
+            #if the object count we are looking at is in the 15
+            if i in indices:
+                y[indices.index(i)][-1]+=count
+            else:
+                y[num_areas][-1]+=count
+            #if i in indices the
     plt.stackplot(x,y) 
     plt.legend(legend_strings)
     return
 
-def graph_all_code_locations(data):
-    plt.figure("DEBUGGING")
+def sum_size_objects_per_location_per_ms_graph(data,important_indices):
+    plt.figure("Data Utilization per Location by Milliseconds Passed")
     x = []
-    y = []
-    for i in range(data["source_names_length"]):
+    y = []#the counts per index we care about + sum rest
+    indices = list(important_indices.keys())
+    #create y coordinate arrays
+    num_areas = len(important_indices.keys())
+    for i in range(num_areas+1):
         y.append([])
-
-    plt.xlabel("GC Number")
-    plt.ylabel("Object Count")
-
+    #create legend
+    legend_strings = []
+    for i in range(num_areas):
+        legend_strings.append(" " + important_indices[indices[i]])
+    legend_strings.append("The Rest")
+    #labels
+    plt.xlabel("Elapsed Milliseconds of Execution ")
+    plt.ylabel("Objects Sum Bytes")
+    #for each gc
     for gc in data["garbage_collections"]:
-        x.append(gc["#"])
+        #add x data time
+        x.append(gc["time_ms"])
+        #initialize all values to 0 for this gc
+        for i in range(num_areas+1):
+            y[i].append(0) 
+        #for each location
         for i in range(data["source_names_length"]):
-            y[i].append(gc["objects_per_location"][i])
+            count = gc["bytes_per_location"][i]
+            #if the object count we are looking at is in the 15
+            if i in indices:
+                y[indices.index(i)][-1]+=count
+            else:
+                y[num_areas][-1]+=count
+            #if i in indices the
     plt.stackplot(x,y) 
+    plt.legend(legend_strings)
     return
-
-
-
 
 if __name__ == '__main__':
     main()
