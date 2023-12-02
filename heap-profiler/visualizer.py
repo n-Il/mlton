@@ -147,11 +147,18 @@ def main():
         print("give the file location that you output using @MLton heap-profiling <filename> --")
     else:
         data = read_data(sys.argv[1])
+        for gc in data["garbage_collections"]: 
+            #print("DEBUG numobjects"+str(gc["num_objects"]))
+            objcount = 0
+            for obj in gc["objects_per_location"]:
+                objcount+= obj
+            #print("DEBUG SUM"+str(objcount))
         number_objects_per_gc_graph(data)
         number_objects_per_ms_graph(data)
         live_data_and_heap_size_per_gc_graph(data)
         live_data_and_heap_size_per_ms_graph(data)
         if data["location_profiling"]: 
+            graph_all_code_locations(data)
             count_sources,size_sources = get_15(data)
             count_objects_per_location_per_gc_graph(data,count_sources)
             count_objects_per_location_per_ms_graph(data,count_sources)
@@ -514,6 +521,25 @@ def sum_size_objects_per_location_per_gc_graph(data,important_indices):
     plt.stackplot(x,y) 
     plt.legend(legend_strings)
     return
+
+def graph_all_code_locations(data):
+    plt.figure("DEBUGGING")
+    x = []
+    y = []
+    for i in range(data["source_names_length"]):
+        y.append([])
+
+    plt.xlabel("GC Number")
+    plt.ylabel("Object Count")
+
+    for gc in data["garbage_collections"]:
+        x.append(gc["#"])
+        for i in range(data["source_names_length"]):
+            y[i].append(gc["objects_per_location"][i])
+    plt.stackplot(x,y) 
+    return
+
+
 
 
 if __name__ == '__main__':
