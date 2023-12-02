@@ -9,6 +9,7 @@ import numpy as np
 from mplcursors import cursor
 import matplotlib.dates
 from datetime import datetime,timezone,timedelta
+import threading
 
 
 ### The binary data reading code is not perfectly portable, it is dependant on the system's C datatype sizes
@@ -39,6 +40,7 @@ UINTMAX_T_BYTE_SIZE = 8
 #       "objects_per_location" LIST of INT
 #       "bytes_per_location" LIST of INT
 # }
+
 
 #in the case of lifetimes we are doing are split by these values
 #lifetimes 1 2 3 4 5 <10 <100 <1000 <10000 <100000 <1000000 <10000000 and longer
@@ -145,7 +147,6 @@ def main():
         print("give the file location that you output using @MLton heap-profiling <filename> --")
     else:
         data = read_data(sys.argv[1])
-        #graphs regardless of options
         number_objects_per_gc_graph(data)
         number_objects_per_ms_graph(data)
         live_data_and_heap_size_per_gc_graph(data)
@@ -160,11 +161,10 @@ def main():
             sum_objects_size_per_lifetime_per_ms_graph(data)
             count_objects_per_lifetime_per_gc_graph(data) 
             count_objects_per_lifetime_per_ms_graph(data)
-
+    plt.show()
     return
 
 def number_objects_per_gc_graph(data):
-    #GRAPH 1 
     plt.figure("Live Objects per Garbage Collection")
     x = []#gc #
     y = []#gc num_objects
@@ -177,11 +177,9 @@ def number_objects_per_gc_graph(data):
     #the following code can be used to add on-hover effects to the plot
     #dots = plt.scatter(x,y,color='none')
     #cursor(dots,hover=True)
-    plt.show()
     return
 
 def number_objects_per_ms_graph(data):
-    #GRAPH 1 
     plt.figure("Live Objects by Milliseconds Passed")
     x = []#gc time_ms
     y = []#gc num_objects
@@ -191,7 +189,6 @@ def number_objects_per_ms_graph(data):
     plt.xlabel("Elapsed Milliseconds of Execution ")
     plt.ylabel("Number of Live Objects")
     plt.plot(x,y)
-    plt.show()
     return
 
 def live_data_and_heap_size_per_gc_graph(data):
@@ -201,17 +198,18 @@ def live_data_and_heap_size_per_gc_graph(data):
     y2 = []#gc live_data
     for gc in data["garbage_collections"]:
         x12.append(gc["#"])
-        y1.append(gc["total_size"]-gc["live_data"])
+        y1.append(gc["total_size"])
         y2.append(gc["live_data"])
     plt.xlabel("GC Number")
     plt.ylabel("Heap Size and Live Data in Bytes")
-    plt.stackplot(x12,[y2,y1])
+    plt.plot(x12,y1)
+    plt.plot(x12,y2)
+
     #plt.xticks(gc_ts_double_line[0])
     #plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
     #dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
     #cursor(dots,hover=True)
     #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    plt.show()
     return
 
 def live_data_and_heap_size_per_ms_graph(data):
@@ -221,17 +219,12 @@ def live_data_and_heap_size_per_ms_graph(data):
     y2 = []#gc live_data
     for gc in data["garbage_collections"]:
         x12.append(gc["time_ms"])
-        y1.append(gc["total_size"]-gc["live_data"])
+        y1.append(gc["total_size"])
         y2.append(gc["live_data"])
     plt.xlabel("Elapsed Milliseconds of Execution ")
     plt.ylabel("Heap Size and Live Data in Bytes")
-    plt.stackplot(x12,[y2,y1])
-    #plt.xticks(gc_ts_double_line[0])
-    #plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    #dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
-    #cursor(dots,hover=True)
-    #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    plt.show()
+    plt.plot(x12,y1)
+    plt.plot(x12,y2)
     return
 
 def sum_objects_size_per_lifetime_per_gc_graph(data):
@@ -256,7 +249,6 @@ def sum_objects_size_per_lifetime_per_gc_graph(data):
     ylabelstr += "or greater GC-survived"
     plt.ylabel(ylabelstr)
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
-    plt.show()
     return
 
 def sum_objects_size_per_lifetime_per_ms_graph(data):
@@ -281,7 +273,6 @@ def sum_objects_size_per_lifetime_per_ms_graph(data):
     ylabelstr += "or greater GC-survived"
     plt.ylabel(ylabelstr)
     plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
-    plt.show()
     return
 
 def count_objects_per_lifetime_per_gc_graph(data):
@@ -305,13 +296,13 @@ def count_objects_per_lifetime_per_gc_graph(data):
         ylabelstr+=","
     ylabelstr += "or greater GC-survived"
     plt.ylabel(ylabelstr)
-    for i in range(13):
-        plt.plot(x,y[i])
-    plt.show()
+    #for i in range(13):
+    #    plt.plot(x,y[i])
+    plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
     return
 
 def count_objects_per_lifetime_per_ms_graph(data):
-    plt.figure("Object Count of Lifetime Magnitudes per GC(legend needs adding)")
+    plt.figure("Object Count of Lifetime Magnitudes by Milliseconds Passed(legend needs adding)")
     x = []#gc time_ms
     accuracy = data["lifetime_accuracy"]
     lifetimes = [1*accuracy,2*accuracy,3*accuracy,4*accuracy,5*accuracy,10*accuracy,100*accuracy,1000*accuracy,10000*accuracy,100000*accuracy,1000000*accuracy,10000000*accuracy]#TODO replace with map
@@ -331,116 +322,10 @@ def count_objects_per_lifetime_per_ms_graph(data):
         ylabelstr+=","
     ylabelstr += "or greater GC-survived"
     plt.ylabel(ylabelstr)
-    for i in range(13):
-        plt.plot(x,y[i])
-    plt.show()
+    #for i in range(13):
+    #    plt.plot(x,y[i])
+    plt.stackplot(x,[y[0],y[1],y[2],y[3],y[4],y[5],y[6],y[7],y[8],y[9],y[10],y[11],y[12]])
     return
-
-
-#Past graphs require different data layout
-def graph_one(data):
-    #GRAPH 1 
-    plt.figure("Live Data and Heapsize in Bytes per GC")
-    gc_num_double_line = ([],[],[])
-    for d in data:
-        gc_num_double_line[0].append(d[0])#gc number 0 indexed
-        gc_num_double_line[1].append(d[2])#live data
-        gc_num_double_line[2].append(d[3])#heapsize data
-    plt.xlabel("GC Number")
-    plt.ylabel("Live Data and Heap Size in Bytes")
-    plt.plot(gc_num_double_line[0],gc_num_double_line[1])
-    plt.plot(gc_num_double_line[0],gc_num_double_line[2]) 
-    #plt.xticks(gc_num_double_line[0])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    #dots = plt.scatter(gc_num_double_line[0]+gc_num_double_line[0],gc_num_double_line[1]+gc_num_double_line[2],color='none')
-    #cursor(dots,hover=True)
-    plt.show()
-    return
-
-def graph_two(data):
-    plt.figure("Live Data and Heapsize in Bytes per milliseconds passed")
-    gc_ts_double_line = ([],[],[])
-    for d in data:
-        #gc_ts_double_line[0].append(datetime.fromtimestamp(d[1],timezone.utc) + timedelta(milliseconds=d[0]))#gc number timestamp
-        gc_ts_double_line[0].append(d[1])#milliseconds
-        gc_ts_double_line[1].append(d[2])#live data
-        gc_ts_double_line[2].append(d[3])#heapsize data
-    plt.xlabel("Milliseconds Passed")
-    plt.ylabel("Live Data and Heap Size in Bytes")
-    plt.plot(gc_ts_double_line[0],gc_ts_double_line[1])
-    plt.plot(gc_ts_double_line[0],gc_ts_double_line[2]) 
-    #plt.xticks(gc_ts_double_line[0])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
-    cursor(dots,hover=True)
-    #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    plt.show()
-    return
-
-def graph_three(data):
-    plt.figure("Live Data and Heapsize in Bytes per milliseconds passed STACK")
-    gc_ts_double_line = ([],[],[])
-    for d in data:
-        #gc_ts_double_line[0].append(datetime.fromtimestamp(d[1],timezone.utc) + timedelta(milliseconds=d[0]))#gc number timestamp
-        gc_ts_double_line[0].append(d[1])#milliseconds
-        gc_ts_double_line[1].append(d[2])#live data
-        gc_ts_double_line[2].append(d[3])#heapsize data
-    plt.xlabel("Milliseconds Passed")
-    plt.ylabel("Live Data and Heap Size in Bytes")
-    plt.stackplot(gc_ts_double_line[0],[gc_ts_double_line[1],gc_ts_double_line[2]])
-    #plt.xticks(gc_ts_double_line[0])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
-    cursor(dots,hover=True)
-    #plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    plt.show()
-    return
-
-#triple line chartz
-#through this chart realized this is the same data
-def graph_four(data):
-    plt.figure("Live Data and Heapsize in Bytes per GC")
-    fields_rotated = ([],[],[],[])
-    for d in data:
-        fields_rotated[0].append(d[0])#gc number 0 indexed
-        fields_rotated[1].append(d[2])#live data
-        fields_rotated[2].append(d[3])#heapsize data
-        fields_rotated[3].append(d[4])#oldgensize data
-    plt.xlabel("GC Number")
-    plt.ylabel("Live Data, Heap Size, oldGenSize")
-    plt.plot(fields_rotated[0],fields_rotated[1],color = "red")
-    plt.plot(fields_rotated[0],fields_rotated[2],color = "yellow") 
-    plt.plot(fields_rotated[0],fields_rotated[3],color = "blue") 
-    #plt.xticks(gc_num_double_line[0])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    dots = plt.scatter(fields_rotated[0]+fields_rotated[0]+fields_rotated[0],fields_rotated[1]+fields_rotated[2]+fields_rotated[3],color='none')
-    cursor(dots,hover=True)
-    plt.show()
-    return
-
-
-#graph 5
-#this is going to take the 5 random moduluses and do an area plot 
-def graph_five(data):
-    plt.figure("utilization based on new header data mod 5")
-    x_values = []
-    y_values = ([],[],[],[],[])
-    for d in data:
-        x_values.append(d[1])
-        y_values[0].append(d[4])
-        y_values[1].append(d[5])
-        y_values[2].append(d[6])
-        y_values[3].append(d[7])
-        y_values[4].append(d[8])
-    plt.xlabel("Milliseconds Passed")
-    plt.ylabel("new header mod 5")
-    plt.stackplot(x_values,[y_values[0],y_values[1],y_values[2],y_values[3],y_values[4]])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d'))
-    #dots = plt.scatter(gc_ts_double_line[0]+gc_ts_double_line[0],gc_ts_double_line[1]+gc_ts_double_line[2],color='none')
-    #cursor(dots,hover=True)
-    plt.show()
-    return
-
 
 if __name__ == '__main__':
     main()
