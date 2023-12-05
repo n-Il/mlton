@@ -237,6 +237,10 @@ profiled-count:
 profiled-time:
 	$(call PROFILED_TEMPLATE,time)
 
+.PHONY: profiled-heap
+profiled-heap:
+	$(call PROFILED_TEMPLATE,heap)
+
 .PHONY: profiled
 profiled:
 	$(MAKE) profiled-alloc
