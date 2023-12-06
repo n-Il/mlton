@@ -9,3 +9,4 @@ modifications to split the 32 bit header for both sourceNameIndex and garbage co
 
 modification towards forcing on the location profiling when compiled with heap profiling(would need to make sure the file output is also still being specified) 
 
+ensure compatibility with other runtime and compilation features/options 
