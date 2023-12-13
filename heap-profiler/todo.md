@@ -12,3 +12,5 @@ modification towards forcing on the location profiling when compiled with heap p
 ensure compatibility with other runtime and compilation features/options 
 
 I don't think the legend in the graphing code for the lifetimes is accurate to the bounds for when an accuracy is different than 1, I believe some edge values are included
+
+is a second heap profiling file in gc_state that is not in use
