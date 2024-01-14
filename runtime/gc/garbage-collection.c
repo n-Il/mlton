@@ -11,47 +11,7 @@ void minorGC (GC_state s) {
   minorCheneyCopyGC (s);
 }
 
-void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
-  uintmax_t numGCs;
-  size_t desiredSize;
-
-  s->lastMajorStatistics.numMinorGCs = 0;
-  numGCs = 
-    s->cumulativeStatistics.numCopyingGCs 
-    + s->cumulativeStatistics.numMarkCompactGCs;
-  if (0 < numGCs
-      and ((float)(s->cumulativeStatistics.numHashConsGCs) / (float)(numGCs)
-           < s->controls.ratios.hashCons))
-    s->hashConsDuringGC = TRUE;
-  desiredSize = 
-    sizeofHeapDesired (s, s->lastMajorStatistics.bytesLive + bytesRequested, 0);
-  if (not FORCE_MARK_COMPACT
-      and not s->hashConsDuringGC // only markCompact can hash cons
-      and s->heap.withMapsSize < s->sysvals.ram
-      and (not isHeapInit (&s->secondaryHeap)
-           or createHeapSecondary (s, desiredSize)))
-    majorCheneyCopyGC (s);
-  else
-    majorMarkCompactGC (s);
-  s->hashConsDuringGC = FALSE;
-  s->lastMajorStatistics.bytesLive = s->heap.oldGenSize;
-  if (s->lastMajorStatistics.bytesLive > s->cumulativeStatistics.maxBytesLive)
-    s->cumulativeStatistics.maxBytesLive = s->lastMajorStatistics.bytesLive;
-  /* Notice that the s->lastMajorStatistics.bytesLive below is
-   * different than the s->lastMajorStatistics.bytesLive used as an
-   * argument to createHeapSecondary above.  Above, it was an
-   * estimate.  Here, it is exactly how much was live after the GC.
-   */
-  if (mayResize) {
-    resizeHeap (s, s->lastMajorStatistics.bytesLive + bytesRequested);
-  }
-  setCardMapAndCrossMap (s);
-  resizeHeapSecondary (s);
-  assert (s->heap.oldGenSize + bytesRequested <= s->heap.size);
-  
-
-  //Heap Profiling Code
-  if (s->heapProfilingFile != NULL){ 
+void heapProfiling(GC_state s){ 
     if (s->heapProfilingGcSurvived){ 
         if(s->heapProfilingGcSurvivedCounter == s->heapProfilingGcSurvivedAccuracy){
             //printf("increment:%d\n",s->heapProfilingGcSurvivedCounter);
@@ -226,8 +186,53 @@ void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
             fwrite(&locationSize[i],sizeof(size_t),1,s->heapProfilingFile);  
         }
     }
+    return;
+}
 
+void majorGC (GC_state s, size_t bytesRequested, bool mayResize) {
+  uintmax_t numGCs;
+  size_t desiredSize;
+
+  s->lastMajorStatistics.numMinorGCs = 0;
+  numGCs = 
+    s->cumulativeStatistics.numCopyingGCs 
+    + s->cumulativeStatistics.numMarkCompactGCs;
+  if (0 < numGCs
+      and ((float)(s->cumulativeStatistics.numHashConsGCs) / (float)(numGCs)
+           < s->controls.ratios.hashCons))
+    s->hashConsDuringGC = TRUE;
+  desiredSize = 
+    sizeofHeapDesired (s, s->lastMajorStatistics.bytesLive + bytesRequested, 0);
+  if (not FORCE_MARK_COMPACT
+      and not s->hashConsDuringGC // only markCompact can hash cons
+      and s->heap.withMapsSize < s->sysvals.ram
+      and (not isHeapInit (&s->secondaryHeap)
+           or createHeapSecondary (s, desiredSize)))
+    majorCheneyCopyGC (s);
+  else
+    majorMarkCompactGC (s);
+  s->hashConsDuringGC = FALSE;
+  s->lastMajorStatistics.bytesLive = s->heap.oldGenSize;
+  if (s->lastMajorStatistics.bytesLive > s->cumulativeStatistics.maxBytesLive)
+    s->cumulativeStatistics.maxBytesLive = s->lastMajorStatistics.bytesLive;
+  /* Notice that the s->lastMajorStatistics.bytesLive below is
+   * different than the s->lastMajorStatistics.bytesLive used as an
+   * argument to createHeapSecondary above.  Above, it was an
+   * estimate.  Here, it is exactly how much was live after the GC.
+   */
+  if (mayResize) {
+    resizeHeap (s, s->lastMajorStatistics.bytesLive + bytesRequested);
   }
+  setCardMapAndCrossMap (s);
+  resizeHeapSecondary (s);
+  assert (s->heap.oldGenSize + bytesRequested <= s->heap.size);
+  
+
+  //Heap Profiling Code
+  if (s->heapProfilingFile != NULL){
+    heapProfiling(s);
+  }
+  //End Heap Profiling Code
 }
 
 void growStackCurrent (GC_state s) {
