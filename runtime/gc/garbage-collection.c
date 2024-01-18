@@ -124,10 +124,8 @@ void heapProfiling(GC_state s){
                 
             }
         }else if (s->heapProfilingLocation){
-            uint32_t sourceIndex = higher32; 
-            //get sourceNameIndex from sourceIndex
-            //TODO:at implement profiling we can copy code like toSourceSeq and pattern match slightly differentl to get there
-            uint32_t sourceNameIndex = s->sourceMaps.sources[sourceIndex].sourceNameIndex;
+            uint32_t sourceNameIndex = higher32; 
+            //uint32_t sourceNameIndex = s->sourceMaps.sources[sourceIndex].sourceNameIndex;
             //increment object
             locationObjects[sourceNameIndex]++;
             //add size

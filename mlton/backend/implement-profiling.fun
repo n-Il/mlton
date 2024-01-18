@@ -55,6 +55,7 @@ structure CFunction =
    end
 
 type sourceSeq = {sourceIndex: int} list
+type sourceNameSeq = {sourceNameIndex: int} list
 
 structure InfoNode =
    struct
@@ -129,6 +130,13 @@ structure Push =
                     case p of
                        Enter (InfoNode.T {sourceIndex, ...}) =>
                           {sourceIndex = sourceIndex} :: ac
+                     | Skip _ => ac)
+      
+      fun toSourceNameSeq (ps: t list): sourceNameSeq =
+         List.fold (rev ps, [], fn (p, ac) =>
+                    case p of
+                       Enter (InfoNode.T {sourceNameIndex, ...}) =>
+                          {sourceNameIndex = sourceNameIndex} :: ac
                      | Skip _ => ac)
    end
 
@@ -293,6 +301,7 @@ fun transform program =
             HashTable.new {equals = Label.equals, hash = Label.hash}
       in
          fun addFrameSourceSeqIndex (label: Label.t, sourceSeqIndex: int): unit =
+      
             (ignore o HashTable.insertIfNew)
             (frameSourceSeqIndex, label, fn () => sourceSeqIndex, fn _ =>
              Error.bug ("ImplementProfiling.addFrameSourceSeqIndex: " ^ Label.toString label))
@@ -731,12 +740,12 @@ fun transform program =
                             case s of
                                Object {obj,  dst=(ty,var), ...} =>
                                   let
-                                     val sourceSeq = 
-                                        Push.toSourceSeq pushes
-                                     val sourceIndex : int =
+                                     val sourceNameSeq = 
+                                        Push.toSourceNameSeq pushes
+                                     val sourceNameIndex : int =
                                         if profile = ProfileHeap then 
-                                           case sourceSeq of
-                                              {sourceIndex}::_ => sourceIndex
+                                           case sourceNameSeq of
+                                              {sourceNameIndex}::_ => sourceNameIndex
                                               | _ => 0
                                         else 0
                                   in
@@ -749,7 +758,7 @@ fun transform program =
                                    label = label,
                                    leaves = leaves,
                                    pushes = pushes,
-                                   statements = (Object {obj = obj, dst = (ty,var), loc = sourceIndex}) :: statements}
+                                   statements = (Object {obj = obj, dst = (ty,var), loc = sourceNameIndex}) :: statements}
                                    end
                              | Profile ps =>
                                   let
